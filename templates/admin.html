@@ -1,0 +1,1 @@
+{% extends "base.html" %}{% block content %}<h1>Buyer inquiries</h1><div class="panel">{% for i in inquiries %}<hr><b>{{i.listing.title}}</b><p>{{i.buyer_name}} · {{i.buyer_email}}</p><p>{{i.message}}</p>{% else %}<p>No inquiries.</p>{% endfor %}</div>{% endblock %}

@@ -1,0 +1,5 @@
+{% extends "base.html" %}{% block content %}
+<section class="hero"><div><small>NATIONWIDE AQUARIUM MARKETPLACE</small><h1>Buy and sell aquarium livestock.</h1><p>Fish, shrimp, snails, plants, coral, invertebrates, and equipment.</p></div><a class="button" href="{{ url_for('sell') }}">Create listing</a></section>
+<form class="filters"><input name="q" value="{{q}}" placeholder="Search species or listing"><select name="category"><option value="">All categories</option>{% for x in ["Freshwater Fish","Saltwater Fish","Shrimp","Snails","Plants","Coral","Invertebrates","Equipment"] %}<option {% if category==x %}selected{% endif %}>{{x}}</option>{% endfor %}</select><button class="button">Search</button></form>
+<div class="grid">{% for l in listings %}<article class="card"><img src="{{ l.image_url or 'https://placehold.co/800x500?text=AquaMarket' }}"><div class="pad"><small>{{l.category}} · {{l.location}}</small><h3><a href="{{url_for('listing_detail',listing_id=l.id)}}">{{l.title}}</a></h3><p>{{l.species}}</p><strong>${{"%.2f"|format(l.price)}}</strong></div></article>{% else %}<p>No listings yet.</p>{% endfor %}</div>
+{% endblock %}
