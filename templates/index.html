@@ -1,1 +1,88 @@
-{% extends 'base.html' %}{% block content %}<section class="hero"><div><h1>Everything aquatic.<br>One marketplace.</h1><p>Shop from hobbyists, breeders, and real aquarium businesses.</p><a class="button" href="{{url_for('register')}}">Open your store</a></div><div class="panel"><b>Built for businesses</b><p>Create a branded storefront, upload inventory, and grow your aquarium business.</p></div></section><form class="search"><input name="q" placeholder="Search AquaMarket"><button class="button">Search</button></form><h2>Stores</h2><div class="stores">{% for s in stores %}<a class="store" href="{{url_for('storefront',slug=s.slug)}}"><b>{{s.name}}</b><span>{{s.owner.city}}, {{s.owner.state}}</span></a>{% else %}<p>No stores yet.</p>{% endfor %}</div><h2>Newest listings</h2><div class="grid">{% for l in listings %}<article class="card">{% if l.photos %}<img src="{{url_for('static',filename='uploads/'+l.photos[0].filename)}}">{% else %}<div class="placeholder">AquaMarket</div>{% endif %}<div class="pad"><h3><a href="{{url_for('listing',lid=l.id)}}">{{l.title}}</a></h3><p>{{l.species}}</p><strong>${{'%.2f'|format(l.price)}}</strong>{% if l.seller.store %}<small>Sold by {{l.seller.store.name}}</small>{% endif %}</div></article>{% endfor %}</div>{% endblock %}
+{% extends "base.html" %}
+{% block content %}
+<section class="hero">
+  <div>
+    <span class="eyebrow">The aquarium marketplace</span>
+    <h1>Shop hobbyists.<br>Breeders. Stores.</h1>
+    <p>Freshwater fish, saltwater livestock, coral, shrimp, plants, aquariums, and equipment.</p>
+    <div class="actions">
+      <a class="button" href="{{ url_for('register') }}">Open your store</a>
+      <a class="secondary-button" href="#listings">Browse listings</a>
+    </div>
+  </div>
+  <div class="hero-card">
+    <b>Built for aquarium businesses</b>
+    <p>Create a branded storefront, publish inventory, explain your shipping policies, and reach buyers nationwide.</p>
+  </div>
+</section>
+
+<form class="search">
+  <input name="q" value="{{ q }}" placeholder="Search fish, coral, plants, equipment...">
+  <select name="category">
+    <option value="">All categories</option>
+    {% for item in categories %}
+      <option value="{{ item }}" {% if category == item %}selected{% endif %}>{{ item }}</option>
+    {% endfor %}
+  </select>
+  <input name="state" value="{{ state }}" placeholder="State">
+  <button class="button">Search</button>
+</form>
+
+<div class="section-heading">
+  <div>
+    <span class="eyebrow">Business directory</span>
+    <h2>Stores and breeders</h2>
+  </div>
+</div>
+
+<div class="stores">
+  {% for store in stores %}
+    <a class="store-card" href="{{ url_for('storefront', slug=store.slug) }}">
+      {% if store.logo_url %}
+        <img src="{{ store.logo_url }}" alt="{{ store.name }}">
+      {% else %}
+        <div class="logo-placeholder">{{ store.name[0] }}</div>
+      {% endif %}
+      <div>
+        <b>{{ store.name }}</b>
+        <p>{{ store.owner.city }}, {{ store.owner.state }}</p>
+        {% if store.verified %}<span class="badge">Verified</span>{% endif %}
+      </div>
+    </a>
+  {% else %}
+    <p>No stores have joined yet.</p>
+  {% endfor %}
+</div>
+
+<div class="section-heading" id="listings">
+  <div>
+    <span class="eyebrow">Marketplace</span>
+    <h2>Newest listings</h2>
+  </div>
+</div>
+
+<div class="grid">
+  {% for listing in listings %}
+    <article class="card">
+      <a href="{{ url_for('listing_detail', listing_id=listing.id) }}">
+        {% if listing.photos %}
+          <img src="{{ listing.photos[0].image_url }}" alt="{{ listing.title }}">
+        {% else %}
+          <div class="placeholder">AquaMarket</div>
+        {% endif %}
+      </a>
+      <div class="pad">
+        <small>{{ listing.category }} · {{ listing.city }}, {{ listing.state }}</small>
+        <h3><a href="{{ url_for('listing_detail', listing_id=listing.id) }}">{{ listing.title }}</a></h3>
+        <p>{{ listing.species }}</p>
+        <strong>${{ "%.2f"|format(listing.price) }}</strong>
+        {% if listing.seller.store %}
+          <p class="store-name">Sold by <a href="{{ url_for('storefront', slug=listing.seller.store.slug) }}">{{ listing.seller.store.name }}</a></p>
+        {% endif %}
+      </div>
+    </article>
+  {% else %}
+    <p>No active listings yet.</p>
+  {% endfor %}
+</div>
+{% endblock %}

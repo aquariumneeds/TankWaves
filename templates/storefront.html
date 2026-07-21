@@ -1,1 +1,71 @@
-{% extends 'base.html' %}{% block content %}<section class="storefront">{% if store.banner %}<img class="banner" src="{{url_for('static',filename='uploads/'+store.banner)}}">{% endif %}<div class="storehead">{% if store.logo %}<img class="logo" src="{{url_for('static',filename='uploads/'+store.logo)}}">{% endif %}<div><h1>{{store.name}}</h1><p>{{store.owner.city}}, {{store.owner.state}}</p></div></div><p>{{store.description}}</p></section><div class="policies"><div class="panel"><h3>Shipping</h3><p>{{store.shipping_policy or 'Contact seller for details.'}}</p></div><div class="panel"><h3>Live arrival guarantee</h3><p>{{store.live_arrival_policy or 'Contact seller for details.'}}</p></div></div><h2>Store inventory</h2><div class="grid">{% for l in listings %}<article class="card"><div class="pad"><h3><a href="{{url_for('listing',lid=l.id)}}">{{l.title}}</a></h3><strong>${{'%.2f'|format(l.price)}}</strong></div></article>{% endfor %}</div>{% endblock %}
+{% extends "base.html" %}
+{% block title %}{{ store.name }} — AquaMarket{% endblock %}
+{% block content %}
+<section class="storefront">
+  {% if store.banner_url %}
+    <img class="banner" src="{{ store.banner_url }}" alt="{{ store.name }}">
+  {% endif %}
+
+  <div class="store-info">
+    {% if store.logo_url %}
+      <img class="store-logo" src="{{ store.logo_url }}" alt="{{ store.name }}">
+    {% else %}
+      <div class="store-logo logo-placeholder">{{ store.name[0] }}</div>
+    {% endif %}
+
+    <div>
+      <span class="eyebrow">AquaMarket store</span>
+      <h1>{{ store.name }}</h1>
+      <p>{{ store.owner.city }}, {{ store.owner.state }}</p>
+      {% if store.verified %}<span class="badge">Verified seller</span>{% endif %}
+    </div>
+  </div>
+
+  <p class="store-description">{{ store.description }}</p>
+
+  <div class="store-links">
+    {% if store.website %}<a href="{{ store.website }}" target="_blank" rel="noopener">Website</a>{% endif %}
+    {% if store.facebook %}<a href="{{ store.facebook }}" target="_blank" rel="noopener">Facebook</a>{% endif %}
+    {% if store.instagram %}<a href="{{ store.instagram }}" target="_blank" rel="noopener">Instagram</a>{% endif %}
+    {% if store.phone %}<span>{{ store.phone }}</span>{% endif %}
+    {% if store.business_hours %}<span>{{ store.business_hours }}</span>{% endif %}
+  </div>
+</section>
+
+<div class="policy-grid">
+  <div class="panel">
+    <h3>Shipping policy</h3>
+    <p>{{ store.shipping_policy or "Contact the seller for shipping details." }}</p>
+  </div>
+  <div class="panel">
+    <h3>Live arrival guarantee</h3>
+    <p>{{ store.live_arrival_policy or "Contact the seller for guarantee details." }}</p>
+  </div>
+</div>
+
+<div class="section-heading">
+  <div>
+    <span class="eyebrow">Store inventory</span>
+    <h2>Available now</h2>
+  </div>
+</div>
+
+<div class="grid">
+  {% for listing in listings %}
+    <article class="card">
+      {% if listing.photos %}
+        <img src="{{ listing.photos[0].image_url }}" alt="{{ listing.title }}">
+      {% else %}
+        <div class="placeholder">AquaMarket</div>
+      {% endif %}
+      <div class="pad">
+        <h3><a href="{{ url_for('listing_detail', listing_id=listing.id) }}">{{ listing.title }}</a></h3>
+        <p>{{ listing.species }}</p>
+        <strong>${{ "%.2f"|format(listing.price) }}</strong>
+      </div>
+    </article>
+  {% else %}
+    <p>No active listings.</p>
+  {% endfor %}
+</div>
+{% endblock %}

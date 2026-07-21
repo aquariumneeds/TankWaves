@@ -1,1 +1,18 @@
-{% extends 'base.html' %}{% block content %}<h1>Create account</h1><form method="post" class="panel form"><input name="name" placeholder="Full name" required><input type="email" name="email" placeholder="Email" required><input type="password" name="password" minlength="8" placeholder="Password" required><input name="city" placeholder="City" required><input name="state" placeholder="State" required><button class="button">Join AquaMarket</button></form>{% endblock %}
+{% extends "base.html" %}
+{% block content %}
+<div class="auth">
+  <div>
+    <span class="eyebrow">Join AquaMarket</span>
+    <h1>Create your account</h1>
+    <p>Sell as an individual or open a full business storefront.</p>
+  </div>
+  <form method="post" class="panel stack">
+    <input name="name" placeholder="Full name" required>
+    <input type="email" name="email" placeholder="Email" required>
+    <input type="password" name="password" minlength="8" placeholder="Password" required>
+    <input name="city" placeholder="City" required>
+    <input name="state" placeholder="State" required>
+    <button class="button">Create account</button>
+  </form>
+</div>
+{% endblock %}

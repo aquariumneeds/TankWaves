@@ -1,1 +1,41 @@
-{% extends 'base.html' %}{% block content %}<div class="detail"><section>{% if listing.photos %}{% for p in listing.photos %}<img class="product" src="{{url_for('static',filename='uploads/'+p.filename)}}">{% endfor %}{% endif %}<div class="panel"><h1>{{listing.title}}</h1><p>{{listing.species}}</p><h2>${{'%.2f'|format(listing.price)}}</h2><p>{{listing.description}}</p></div></section><aside class="panel"><h2>Seller</h2>{% if listing.seller.store %}<h3>{{listing.seller.store.name}}</h3><a class="button" href="{{url_for('storefront',slug=listing.seller.store.slug)}}">Visit store</a>{% else %}<p>{{listing.seller.name}}</p>{% endif %}</aside></div>{% endblock %}
+{% extends "base.html" %}
+{% block content %}
+<div class="detail">
+  <section>
+    {% if listing.photos %}
+      <div class="gallery">
+        {% for photo in listing.photos %}
+          <img src="{{ photo.image_url }}" alt="{{ listing.title }}">
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="detail-placeholder">AquaMarket</div>
+    {% endif %}
+
+    <div class="panel listing-copy">
+      <small>{{ listing.category }}</small>
+      <h1>{{ listing.title }}</h1>
+      <p>{{ listing.species }}{% if listing.scientific_name %} · <em>{{ listing.scientific_name }}</em>{% endif %}</p>
+      <h2>${{ "%.2f"|format(listing.price) }}</h2>
+      <p>Quantity available: {{ listing.quantity }}</p>
+      <p>{{ listing.description }}</p>
+      <div class="badges">
+        {% if listing.shipping_available %}<span class="badge">Shipping available</span>{% endif %}
+        {% if listing.local_pickup %}<span class="badge">Local pickup</span>{% endif %}
+      </div>
+    </div>
+  </section>
+
+  <aside class="panel seller-card">
+    <span class="eyebrow">Seller</span>
+    {% if listing.seller.store %}
+      <h2>{{ listing.seller.store.name }}</h2>
+      <p>{{ listing.city }}, {{ listing.state }}</p>
+      <a class="button" href="{{ url_for('storefront', slug=listing.seller.store.slug) }}">Visit store</a>
+    {% else %}
+      <h2>{{ listing.seller.name }}</h2>
+      <p>{{ listing.city }}, {{ listing.state }}</p>
+    {% endif %}
+  </aside>
+</div>
+{% endblock %}

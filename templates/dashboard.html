@@ -1,1 +1,63 @@
-{% extends 'base.html' %}{% block content %}<div class="dash"><div><h1>Seller dashboard</h1><p>Welcome, {{current_user.name}}</p></div><a class="button" href="{{url_for('sell')}}">+ New listing</a></div><div class="panel">{% if current_user.store %}<h2>{{current_user.store.name}}</h2><a href="{{url_for('storefront',slug=current_user.store.slug)}}">View storefront</a>{% else %}<h2>Bring your business to AquaMarket</h2><p>Add your store name, logo, banner, policies, and inventory.</p><a class="button" href="{{url_for('create_store')}}">Open a store</a>{% endif %}</div><h2>My listings</h2>{% for l in listings %}<div class="row"><b>{{l.title}}</b><span>${{'%.2f'|format(l.price)}}</span></div>{% else %}<p>No listings yet.</p>{% endfor %}{% endblock %}
+{% extends "base.html" %}
+{% block content %}
+<section class="dash-head">
+  <div>
+    <span class="eyebrow">Seller dashboard</span>
+    <h1>Welcome, {{ current_user.name }}</h1>
+  </div>
+  <a class="button" href="{{ url_for('create_listing') }}">+ New listing</a>
+</section>
+
+<div class="stats">
+  <div class="stat"><strong>{{ listings|length }}</strong><span>Total listings</span></div>
+  <div class="stat"><strong>{{ active_count }}</strong><span>Active</span></div>
+  <div class="stat"><strong>{{ sold_count }}</strong><span>Sold</span></div>
+</div>
+
+<div class="panel store-setup">
+  {% if current_user.store %}
+    <div>
+      <b>{{ current_user.store.name }}</b>
+      <p>Your business storefront is active.</p>
+    </div>
+    <div>
+      <a href="{{ url_for('storefront', slug=current_user.store.slug) }}">View store</a>
+      · <a href="{{ url_for('edit_store') }}">Edit store</a>
+    </div>
+  {% else %}
+    <div>
+      <b>Turn your account into a business store</b>
+      <p>Add your logo, banner, business details, policies, and social links.</p>
+    </div>
+    <a class="button" href="{{ url_for('create_store') }}">Open a store</a>
+  {% endif %}
+</div>
+
+<div class="panel">
+  <h2>My listings</h2>
+  {% for listing in listings %}
+    <div class="listing-row">
+      <div>
+        <b>{{ listing.title }}</b>
+        <span>${{ "%.2f"|format(listing.price) }} · {{ listing.status|title }} · Qty {{ listing.quantity }}</span>
+      </div>
+      <div class="row-actions">
+        <a href="{{ url_for('listing_detail', listing_id=listing.id) }}">View</a>
+        <a href="{{ url_for('edit_listing', listing_id=listing.id) }}">Edit</a>
+        <form method="post" action="{{ url_for('listing_status', listing_id=listing.id) }}">
+          <select name="status" onchange="this.form.submit()">
+            {% for status in ["active", "paused", "sold"] %}
+              <option value="{{ status }}" {% if listing.status == status %}selected{% endif %}>{{ status|title }}</option>
+            {% endfor %}
+          </select>
+        </form>
+        <form method="post" action="{{ url_for('delete_listing', listing_id=listing.id) }}" onsubmit="return confirm('Delete this listing?')">
+          <button class="link danger">Delete</button>
+        </form>
+      </div>
+    </div>
+  {% else %}
+    <p>No listings yet.</p>
+  {% endfor %}
+</div>
+{% endblock %}

@@ -1,1 +1,50 @@
-{% extends 'base.html' %}{% block content %}<h1>Create listing</h1><form method="post" enctype="multipart/form-data" class="panel form"><input name="title" placeholder="Listing title" required><select name="category">{% for c in cats %}<option>{{c}}</option>{% endfor %}</select><input name="species" placeholder="Species" required><input type="number" step=".01" name="price" placeholder="Price" required><input type="number" name="quantity" value="1" required><input name="city" value="{{current_user.city}}" required><input name="state" value="{{current_user.state}}" required><input type="file" name="photos" multiple><textarea name="description" rows="7" placeholder="Description" required></textarea><label><input type="checkbox" name="shipping"> Shipping available</label><label><input type="checkbox" name="pickup" checked> Local pickup</label><button class="button">Publish</button></form>{% endblock %}
+{% extends "base.html" %}
+{% block content %}
+<div class="form-heading">
+  <span class="eyebrow">Seller tools</span>
+  <h1>{{ "Edit listing" if listing else "Create a listing" }}</h1>
+</div>
+
+<form method="post" enctype="multipart/form-data" class="panel form">
+  <input name="title" value="{{ listing.title if listing else '' }}" placeholder="Listing title" required>
+
+  <div class="two-columns">
+    <select name="category" required>
+      {% for item in categories %}
+        <option value="{{ item }}" {% if listing and listing.category == item %}selected{% endif %}>{{ item }}</option>
+      {% endfor %}
+    </select>
+    <input name="species" value="{{ listing.species if listing else '' }}" placeholder="Species or common name" required>
+  </div>
+
+  <input name="scientific_name" value="{{ listing.scientific_name if listing else '' }}" placeholder="Scientific name (optional)">
+
+  <div class="two-columns">
+    <input type="number" step=".01" min=".01" name="price" value="{{ listing.price if listing else '' }}" placeholder="Price" required>
+    <input type="number" min="1" name="quantity" value="{{ listing.quantity if listing else 1 }}" required>
+  </div>
+
+  <div class="two-columns">
+    <input name="city" value="{{ listing.city if listing else current_user.city }}" placeholder="City" required>
+    <input name="state" value="{{ listing.state if listing else current_user.state }}" placeholder="State" required>
+  </div>
+
+  <label>Photos — up to 10 total
+    <input type="file" name="photos" multiple accept="image/*">
+  </label>
+
+  {% if listing and listing.photos %}
+    <div class="photo-strip">
+      {% for photo in listing.photos %}
+        <img src="{{ photo.image_url }}" alt="">
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <textarea name="description" rows="8" placeholder="Description" required>{{ listing.description if listing else '' }}</textarea>
+  <label class="checkbox"><input type="checkbox" name="shipping_available" {% if listing and listing.shipping_available %}checked{% endif %}> Nationwide shipping available</label>
+  <label class="checkbox"><input type="checkbox" name="local_pickup" {% if not listing or listing.local_pickup %}checked{% endif %}> Local pickup available</label>
+
+  <button class="button">{{ "Save changes" if listing else "Publish listing" }}</button>
+</form>
+{% endblock %}

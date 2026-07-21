@@ -1,1 +1,33 @@
-{% extends 'base.html' %}{% block content %}<h1>Open your AquaMarket store</h1><form method="post" enctype="multipart/form-data" class="panel form"><input name="name" placeholder="Business/store name" required><textarea name="description" rows="5" placeholder="About your business"></textarea><label>Logo<input type="file" name="logo"></label><label>Banner<input type="file" name="banner"></label><textarea name="shipping_policy" rows="5" placeholder="Shipping policy"></textarea><textarea name="live_arrival_policy" rows="5" placeholder="Live arrival policy"></textarea><button class="button">Open store</button></form>{% endblock %}
+{% extends "base.html" %}
+{% block content %}
+<div class="form-heading">
+  <span class="eyebrow">Business storefront</span>
+  <h1>{{ "Edit your store" if store else "Open your AquaMarket store" }}</h1>
+</div>
+
+<form method="post" enctype="multipart/form-data" class="panel form">
+  <input name="name" value="{{ store.name if store else '' }}" placeholder="Business or store name" required>
+  <textarea name="description" rows="6" placeholder="Tell buyers about your business">{{ store.description if store else '' }}</textarea>
+
+  <div class="two-columns">
+    <input name="phone" value="{{ store.phone if store else '' }}" placeholder="Business phone (optional)">
+    <input name="business_hours" value="{{ store.business_hours if store else '' }}" placeholder="Business hours (optional)">
+  </div>
+
+  <input name="website" value="{{ store.website if store else '' }}" placeholder="Website URL (optional)">
+  <input name="facebook" value="{{ store.facebook if store else '' }}" placeholder="Facebook URL (optional)">
+  <input name="instagram" value="{{ store.instagram if store else '' }}" placeholder="Instagram URL (optional)">
+
+  <label>Store logo
+    <input type="file" name="logo" accept="image/*">
+  </label>
+  <label>Store cover banner
+    <input type="file" name="banner" accept="image/*">
+  </label>
+
+  <textarea name="shipping_policy" rows="6" placeholder="Shipping policy">{{ store.shipping_policy if store else '' }}</textarea>
+  <textarea name="live_arrival_policy" rows="6" placeholder="Live arrival guarantee policy">{{ store.live_arrival_policy if store else '' }}</textarea>
+
+  <button class="button">{{ "Save store" if store else "Open store" }}</button>
+</form>
+{% endblock %}
