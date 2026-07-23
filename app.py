@@ -208,7 +208,7 @@ def register():
             db.session.add(user)
             db.session.commit()
             login_user(user)
-            flash("Welcome to AquaMarket!", "success")
+            flash("Welcome to TankWaves!", "success")
             return redirect(url_for("dashboard"))
     return render_template("register.html")
 
@@ -282,7 +282,7 @@ def create_store():
                 )
                 db.session.add(store)
                 db.session.commit()
-                flash("Your AquaMarket store is live.", "success")
+                flash("Your TankWaves store is live.", "success")
                 return redirect(url_for("storefront", slug=store.slug))
             except Exception as exc:
                 db.session.rollback()

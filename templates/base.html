@@ -3,13 +3,13 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>{% block title %}AquaMarket{% endblock %}</title>
+  <title>{% block title %}TankWaves{% endblock %}</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
 <header>
   <div class="container nav">
-    <a class="brand" href="{{ url_for('home') }}">AquaMarket</a>
+    <a class="brand" href="{{ url_for('home') }}">TankWaves</a>
     <nav>
       <a href="{{ url_for('home') }}">Browse</a>
       {% if current_user.is_authenticated %}
@@ -35,7 +35,7 @@
 
 <footer>
   <div class="container">
-    <strong>AquaMarket</strong>
+    <strong>TankWaves</strong>
     <p>The marketplace for aquarium hobbyists, breeders, and stores.</p>
   </div>
 </footer>

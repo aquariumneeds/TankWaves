@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}{{ store.name }} — AquaMarket{% endblock %}
+{% block title %}{{ store.name }} — TankWaves{% endblock %}
 {% block content %}
 <section class="storefront">
   {% if store.banner_url %}
@@ -14,7 +14,7 @@
     {% endif %}
 
     <div>
-      <span class="eyebrow">AquaMarket store</span>
+      <span class="eyebrow">TankWaves store</span>
       <h1>{{ store.name }}</h1>
       <p>{{ store.owner.city }}, {{ store.owner.state }}</p>
       {% if store.verified %}<span class="badge">Verified seller</span>{% endif %}
@@ -56,7 +56,7 @@
       {% if listing.photos %}
         <img src="{{ listing.photos[0].image_url }}" alt="{{ listing.title }}">
       {% else %}
-        <div class="placeholder">AquaMarket</div>
+        <div class="placeholder">TankWaves</div>
       {% endif %}
       <div class="pad">
         <h3><a href="{{ url_for('listing_detail', listing_id=listing.id) }}">{{ listing.title }}</a></h3>
