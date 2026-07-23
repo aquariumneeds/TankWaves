@@ -1,63 +1,66 @@
 {% extends "base.html" %}
+{% block title %}Seller dashboard — TankWaves{% endblock %}
 {% block content %}
-<section class="dash-head">
-  <div>
-    <span class="eyebrow">Seller dashboard</span>
-    <h1>Welcome, {{ current_user.name }}</h1>
-  </div>
+<section class="container page-head dashboard-head">
+  <div><span class="eyebrow">SELLER DASHBOARD</span><h1>Welcome, {{ current_user.name }}</h1></div>
   <a class="button" href="{{ url_for('create_listing') }}">+ New listing</a>
 </section>
-
-<div class="stats">
-  <div class="stat"><strong>{{ listings|length }}</strong><span>Total listings</span></div>
-  <div class="stat"><strong>{{ active_count }}</strong><span>Active</span></div>
-  <div class="stat"><strong>{{ sold_count }}</strong><span>Sold</span></div>
-</div>
-
-<div class="panel store-setup">
+<section class="container stats-grid">
+  <div><strong>{{ listings|length }}</strong><span>Total listings</span></div>
+  <div><strong>{{ active_count }}</strong><span>Active</span></div>
+  <div><strong>{{ sold_count }}</strong><span>Sold</span></div>
+  <div><strong>{{ inquiries|length }}</strong><span>Recent inquiries</span></div>
+</section>
+<section class="container section">
   {% if current_user.store %}
-    <div>
-      <b>{{ current_user.store.name }}</b>
-      <p>Your business storefront is active.</p>
-    </div>
-    <div>
-      <a href="{{ url_for('storefront', slug=current_user.store.slug) }}">View store</a>
-      · <a href="{{ url_for('edit_store') }}">Edit store</a>
+    <div class="dashboard-card">
+      <div><h2>{{ current_user.store.name }}</h2><p>Your business storefront is active.</p></div>
+      <div><a href="{{ url_for('storefront', slug=current_user.store.slug) }}">View store</a> · <a href="{{ url_for('edit_store') }}">Edit store</a></div>
     </div>
   {% else %}
-    <div>
-      <b>Turn your account into a business store</b>
-      <p>Add your logo, banner, business details, policies, and social links.</p>
+    <div class="dashboard-card">
+      <div><h2>Turn your account into a business store</h2><p>Add your logo, banner, policies, and social links.</p></div>
+      <a class="button secondary" href="{{ url_for('create_store') }}">Open a store</a>
     </div>
-    <a class="button" href="{{ url_for('create_store') }}">Open a store</a>
   {% endif %}
-</div>
-
-<div class="panel">
+</section>
+<section class="container section">
   <h2>My listings</h2>
-  {% for listing in listings %}
-    <div class="listing-row">
-      <div>
-        <b>{{ listing.title }}</b>
-        <span>${{ "%.2f"|format(listing.price) }} · {{ listing.status|title }} · Qty {{ listing.quantity }}</span>
+  <div class="dashboard-list">
+    {% for listing in listings %}
+      <div class="dashboard-row">
+        <div><strong>{{ listing.title }}</strong><span>${{ "%.2f"|format(listing.price) }} · {{ listing.status|title }} · Qty {{ listing.quantity }}</span></div>
+        <div class="row-actions">
+          <a href="{{ url_for('listing_detail', listing_id=listing.id) }}">View</a>
+          <a href="{{ url_for('edit_listing', listing_id=listing.id) }}">Edit</a>
+          <form method="post" action="{{ url_for('listing_status', listing_id=listing.id) }}">
+            <select name="status" onchange="this.form.submit()">
+              {% for status in ["active", "paused", "sold"] %}
+                <option value="{{ status }}" {% if listing.status == status %}selected{% endif %}>{{ status|title }}</option>
+              {% endfor %}
+            </select>
+          </form>
+          <form method="post" action="{{ url_for('delete_listing', listing_id=listing.id) }}" onsubmit="return confirm('Delete this listing?')">
+            <button class="link-button danger" type="submit">Delete</button>
+          </form>
+        </div>
       </div>
-      <div class="row-actions">
-        <a href="{{ url_for('listing_detail', listing_id=listing.id) }}">View</a>
-        <a href="{{ url_for('edit_listing', listing_id=listing.id) }}">Edit</a>
-        <form method="post" action="{{ url_for('listing_status', listing_id=listing.id) }}">
-          <select name="status" onchange="this.form.submit()">
-            {% for status in ["active", "paused", "sold"] %}
-              <option value="{{ status }}" {% if listing.status == status %}selected{% endif %}>{{ status|title }}</option>
-            {% endfor %}
-          </select>
-        </form>
-        <form method="post" action="{{ url_for('delete_listing', listing_id=listing.id) }}" onsubmit="return confirm('Delete this listing?')">
-          <button class="link danger">Delete</button>
-        </form>
+    {% else %}
+      <div class="empty-state">No listings yet.</div>
+    {% endfor %}
+  </div>
+</section>
+<section class="container section">
+  <h2>Buyer inquiries</h2>
+  <div class="dashboard-list">
+    {% for inquiry in inquiries %}
+      <div class="dashboard-row inquiry-row">
+        <div><strong>{{ inquiry.listing.title }}</strong><span>{{ inquiry.buyer_name }} · {{ inquiry.buyer_email }}</span><p>{{ inquiry.message }}</p></div>
+        <small>{{ inquiry.created_at.strftime('%b %d, %Y') }}</small>
       </div>
-    </div>
-  {% else %}
-    <p>No listings yet.</p>
-  {% endfor %}
-</div>
+    {% else %}
+      <div class="empty-state">No inquiries yet.</div>
+    {% endfor %}
+  </div>
+</section>
 {% endblock %}

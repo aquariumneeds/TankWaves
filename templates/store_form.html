@@ -1,33 +1,28 @@
 {% extends "base.html" %}
+{% block title %}{{ "Edit store" if store else "Open a store" }} — TankWaves{% endblock %}
 {% block content %}
-<div class="form-heading">
-  <span class="eyebrow">Business storefront</span>
-  <h1>{{ "Edit your store" if store else "Open your TankWaves store" }}</h1>
-</div>
-
-<form method="post" enctype="multipart/form-data" class="panel form">
-  <input name="name" value="{{ store.name if store else '' }}" placeholder="Business or store name" required>
-  <textarea name="description" rows="6" placeholder="Tell buyers about your business">{{ store.description if store else '' }}</textarea>
-
-  <div class="two-columns">
-    <input name="phone" value="{{ store.phone if store else '' }}" placeholder="Business phone (optional)">
-    <input name="business_hours" value="{{ store.business_hours if store else '' }}" placeholder="Business hours (optional)">
-  </div>
-
-  <input name="website" value="{{ store.website if store else '' }}" placeholder="Website URL (optional)">
-  <input name="facebook" value="{{ store.facebook if store else '' }}" placeholder="Facebook URL (optional)">
-  <input name="instagram" value="{{ store.instagram if store else '' }}" placeholder="Instagram URL (optional)">
-
-  <label>Store logo
-    <input type="file" name="logo" accept="image/*">
-  </label>
-  <label>Store cover banner
-    <input type="file" name="banner" accept="image/*">
-  </label>
-
-  <textarea name="shipping_policy" rows="6" placeholder="Shipping policy">{{ store.shipping_policy if store else '' }}</textarea>
-  <textarea name="live_arrival_policy" rows="6" placeholder="Live arrival guarantee policy">{{ store.live_arrival_policy if store else '' }}</textarea>
-
-  <button class="button">{{ "Save store" if store else "Open store" }}</button>
-</form>
+<section class="container form-page">
+  <form class="form-card wide" method="post" enctype="multipart/form-data">
+    <span class="eyebrow">BUSINESS STOREFRONT</span>
+    <h1>{{ "Edit your store" if store else "Open your TankWaves store" }}</h1>
+    <label>Store name<input name="name" value="{{ store.name if store else '' }}" required></label>
+    <label>About your business<textarea name="description" rows="6">{{ store.description if store else '' }}</textarea></label>
+    <div class="two-col">
+      <label>Store logo<input type="file" name="logo" accept="image/*"></label>
+      <label>Store cover banner<input type="file" name="banner" accept="image/*"></label>
+    </div>
+    <div class="two-col">
+      <label>Shipping policy<textarea name="shipping_policy" rows="5">{{ store.shipping_policy if store else '' }}</textarea></label>
+      <label>Live-arrival policy<textarea name="live_arrival_policy" rows="5">{{ store.live_arrival_policy if store else '' }}</textarea></label>
+    </div>
+    <div class="two-col">
+      <label>Website<input name="website" value="{{ store.website if store else '' }}"></label>
+      <label>Phone<input name="phone" value="{{ store.phone if store else '' }}"></label>
+      <label>Facebook<input name="facebook" value="{{ store.facebook if store else '' }}"></label>
+      <label>Instagram<input name="instagram" value="{{ store.instagram if store else '' }}"></label>
+    </div>
+    <label>Business hours<input name="business_hours" value="{{ store.business_hours if store else '' }}"></label>
+    <button class="button" type="submit">{{ "Save store" if store else "Open store" }}</button>
+  </form>
+</section>
 {% endblock %}

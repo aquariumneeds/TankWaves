@@ -2,19 +2,30 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="{% block description %}TankWaves is a nationwide aquarium marketplace connecting buyers with hobbyists, breeders, coral farms, and stores.{% endblock %}">
   <title>{% block title %}TankWaves{% endblock %}</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=6">
 </head>
 <body>
-<header>
-  <div class="container nav">
-    <a class="brand" href="{{ url_for('home') }}">TankWaves</a>
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="brand" href="{{ url_for('home') }}">
+      <span class="brand-mark">TW</span>
+      <span>TankWaves</span>
+    </a>
+
+    <form class="header-search" action="{{ url_for('browse') }}" method="get">
+      <input name="q" placeholder="Search all sellers for fish, coral, plants...">
+      <button type="submit">Search</button>
+    </form>
+
     <nav>
-      <a href="{{ url_for('home') }}">Browse</a>
+      <a href="{{ url_for('browse') }}">Shop</a>
       {% if current_user.is_authenticated %}
-        <a href="{{ url_for('dashboard') }}">Dashboard</a>
-        <a class="button small" href="{{ url_for('create_listing') }}">Sell</a>
+        <a href="{{ url_for('favorites') }}">Watchlist</a>
+        <a href="{{ url_for('dashboard') }}">Selling</a>
+        <a class="button small" href="{{ url_for('create_listing') }}">List an item</a>
         <a href="{{ url_for('logout') }}">Log out</a>
       {% else %}
         <a href="{{ url_for('login') }}">Log in</a>
@@ -24,19 +35,34 @@
   </div>
 </header>
 
-<main class="container page">
-  {% with messages = get_flashed_messages(with_categories=true) %}
-    {% for category, text in messages %}
-      <div class="flash {{ category }}">{{ text }}</div>
-    {% endfor %}
-  {% endwith %}
+<main>
+  <div class="container flash-wrap">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, text in messages %}
+        <div class="flash {{ category }}">{{ text }}</div>
+      {% endfor %}
+    {% endwith %}
+  </div>
   {% block content %}{% endblock %}
 </main>
 
-<footer>
-  <div class="container">
-    <strong>TankWaves</strong>
-    <p>The marketplace for aquarium hobbyists, breeders, and stores.</p>
+<footer class="site-footer">
+  <div class="container footer-grid">
+    <div>
+      <strong>TankWaves</strong>
+      <p>The aquarium marketplace where every seller’s matching listings appear together.</p>
+      <span class="version-badge">Version 6</span>
+    </div>
+    <div>
+      <strong>Buy</strong>
+      <a href="{{ url_for('browse') }}">Search all listings</a>
+      <a href="{{ url_for('favorites') if current_user.is_authenticated else url_for('login') }}">Watchlist</a>
+    </div>
+    <div>
+      <strong>Sell</strong>
+      <a href="{{ url_for('create_listing') if current_user.is_authenticated else url_for('register') }}">Create a listing</a>
+      <a href="{{ url_for('create_store') if current_user.is_authenticated else url_for('register') }}">Open a storefront</a>
+    </div>
   </div>
 </footer>
 </body>

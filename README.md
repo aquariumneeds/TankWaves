@@ -1,44 +1,60 @@
-# TankWaves Version 4 — Branding Update
+# TankWaves Version 6 — All-Seller Marketplace Search
 
-This upgrade adds:
+Version 6 makes the public shopping experience work more like eBay:
 
-- PostgreSQL support for permanent user, store, and listing data
-- Cloudinary support for permanent photos
-- Business storefront logos and banners
-- Website, Facebook, Instagram, phone, and business hours
-- Listing editing
-- Active, paused, and sold listing statuses
-- Seller dashboard statistics
-- Improved marketplace and mobile design
+- One search combines matching listings from every seller
+- Prominent customer-facing marketplace homepage
+- Left-sidebar filters for category, state, delivery, and sorting
+- List-style comparison results with price, seller, rating, location, and delivery badges
+- Species pages showing all sellers offering the same fish or item
+- Watchlist support
+- Seller storefronts remain separate, but marketplace search is not limited to one store
+- Visible “Version 6” marker and `/version` endpoint for deployment verification
+- Login accepts either the registered email or account name
+- No destructive database reset or table deletion
 
-## Important setup
+## Verify the deployment
 
-### 1. Render PostgreSQL
-The included `render.yaml` can create a PostgreSQL database when deploying as a Blueprint.
+After Render deploys, visit:
 
-For an existing Render web service, create a PostgreSQL database in Render and add its Internal Database URL as:
+```text
+https://tankwaves.com/version
+```
 
-`DATABASE_URL`
+It should display:
 
-### 2. Cloudinary
-Create a free Cloudinary account. In the Cloudinary dashboard, copy the API Environment Variable beginning with:
+```json
+{"name":"TankWaves","version":"6.0"}
+```
 
-`cloudinary://`
+The public homepage should say:
 
-Add it to Render as:
+```text
+Search once. Compare every seller.
+```
 
-`CLOUDINARY_URL`
+## Existing Render service
 
-### 3. Render commands
+Keep your current web service, database, domain, and environment variables.
 
-Build command:
+Build:
 
-`pip install -r requirements.txt`
+```text
+pip install -r requirements.txt
+```
 
-Start command:
+Start:
 
-`gunicorn app:app`
+```text
+gunicorn app:app
+```
 
-## Warning about upgrading an existing SQLite deployment
+Required environment variables:
 
-Your old SQLite account and store data do not automatically move into PostgreSQL. Keep the old deployment available until the new database is configured and tested.
+- `DATABASE_URL`
+- `SECRET_KEY`
+- `CLOUDINARY_URL`
+
+Optional:
+
+- `ADMIN_EMAILS`

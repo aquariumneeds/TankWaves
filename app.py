@@ -3,18 +3,25 @@ from __future__ import annotations
 import os
 import re
 from datetime import datetime
+from functools import wraps
 
 import cloudinary
 import cloudinary.uploader
 from flask import Flask, abort, flash, redirect, render_template, request, url_for
-from flask_login import LoginManager, UserMixin, current_user, login_required, login_user, logout_user
+from flask_login import (
+    LoginManager,
+    UserMixin,
+    current_user,
+    login_required,
+    login_user,
+    logout_user,
+)
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import or_
 from werkzeug.security import check_password_hash, generate_password_hash
 
 app = Flask(__name__)
-app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "development-only-secret")
-
+app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "development-only-secret-change-me")
 database_url = os.environ.get("DATABASE_URL", "sqlite:///tankwaves.db")
 if database_url.startswith("postgres://"):
     database_url = database_url.replace("postgres://", "postgresql://", 1)
@@ -23,8 +30,7 @@ app.config["SQLALCHEMY_DATABASE_URI"] = database_url
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["MAX_CONTENT_LENGTH"] = 30 * 1024 * 1024
 
-cloudinary_url = os.environ.get("CLOUDINARY_URL")
-if cloudinary_url:
+if os.environ.get("CLOUDINARY_URL"):
     cloudinary.config(secure=True)
 
 db = SQLAlchemy(app)
@@ -33,9 +39,24 @@ login_manager.login_view = "login"
 login_manager.login_message = "Please log in to continue."
 
 CATEGORIES = [
-    "Freshwater Fish", "Saltwater Fish", "Shrimp", "Snails", "Plants",
-    "Coral", "Invertebrates", "Equipment", "Aquariums", "Food & Supplies"
+    "Freshwater Fish",
+    "Saltwater Fish",
+    "Shrimp",
+    "Snails",
+    "Plants",
+    "Coral",
+    "Invertebrates",
+    "Equipment",
+    "Aquariums",
+    "Food & Supplies",
 ]
+
+APP_VERSION = "6.0"
+
+SHIPPING_OPTIONS = {
+    "shipping": "Nationwide shipping",
+    "pickup": "Local pickup",
+}
 
 
 class User(UserMixin, db.Model):
@@ -47,8 +68,22 @@ class User(UserMixin, db.Model):
     state = db.Column(db.String(40), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    listings = db.relationship("Listing", backref="seller", lazy=True, cascade="all, delete-orphan")
-    store = db.relationship("Store", backref="owner", uselist=False, cascade="all, delete-orphan")
+    listings = db.relationship(
+        "Listing", backref="seller", lazy=True, cascade="all, delete-orphan"
+    )
+    store = db.relationship(
+        "Store", backref="owner", uselist=False, cascade="all, delete-orphan"
+    )
+    favorites = db.relationship(
+        "Favorite", backref="user", lazy=True, cascade="all, delete-orphan"
+    )
+    reviews_written = db.relationship(
+        "Review",
+        foreign_keys="Review.reviewer_id",
+        backref="reviewer",
+        lazy=True,
+        cascade="all, delete-orphan",
+    )
 
     def set_password(self, password: str) -> None:
         self.password_hash = generate_password_hash(password)
@@ -76,6 +111,16 @@ class Store(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     owner_id = db.Column(db.Integer, db.ForeignKey("user.id"), unique=True, nullable=False)
 
+    reviews = db.relationship(
+        "Review", backref="store", lazy=True, cascade="all, delete-orphan"
+    )
+
+    @property
+    def rating_average(self) -> float:
+        if not self.reviews:
+            return 0.0
+        return sum(review.rating for review in self.reviews) / len(self.reviews)
+
 
 class Listing(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -93,12 +138,23 @@ class Listing(db.Model):
     status = db.Column(db.String(20), default="active")
     featured = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    updated_at = db.Column(
+        db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
+    )
     seller_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
 
     photos = db.relationship(
-        "Photo", backref="listing", lazy=True, cascade="all, delete-orphan",
-        order_by="Photo.position"
+        "Photo",
+        backref="listing",
+        lazy=True,
+        cascade="all, delete-orphan",
+        order_by="Photo.position",
+    )
+    favorites = db.relationship(
+        "Favorite", backref="listing", lazy=True, cascade="all, delete-orphan"
+    )
+    inquiries = db.relationship(
+        "Inquiry", backref="listing", lazy=True, cascade="all, delete-orphan"
     )
 
 
@@ -110,9 +166,57 @@ class Photo(db.Model):
     listing_id = db.Column(db.Integer, db.ForeignKey("listing.id"), nullable=False)
 
 
+class Favorite(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    listing_id = db.Column(db.Integer, db.ForeignKey("listing.id"), nullable=False)
+
+    __table_args__ = (
+        db.UniqueConstraint("user_id", "listing_id", name="uq_favorite_user_listing"),
+    )
+
+
+class Review(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    rating = db.Column(db.Integer, nullable=False)
+    comment = db.Column(db.Text, default="")
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    reviewer_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    store_id = db.Column(db.Integer, db.ForeignKey("store.id"), nullable=False)
+
+    __table_args__ = (
+        db.UniqueConstraint("reviewer_id", "store_id", name="uq_review_user_store"),
+    )
+
+
+class Inquiry(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    buyer_name = db.Column(db.String(120), nullable=False)
+    buyer_email = db.Column(db.String(180), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    listing_id = db.Column(db.Integer, db.ForeignKey("listing.id"), nullable=False)
+
+
 @login_manager.user_loader
 def load_user(user_id):
     return db.session.get(User, int(user_id))
+
+
+def admin_required(view):
+    @wraps(view)
+    def wrapped(*args, **kwargs):
+        allowed = {
+            item.strip().lower()
+            for item in os.environ.get("ADMIN_EMAILS", "").split(",")
+            if item.strip()
+        }
+        if not current_user.is_authenticated or current_user.email.lower() not in allowed:
+            abort(403)
+        return view(*args, **kwargs)
+
+    return wrapped
 
 
 def slugify(value: str) -> str:
@@ -151,29 +255,52 @@ def delete_cloudinary(public_id):
             pass
 
 
-@app.route("/")
-def home():
+def listing_query_from_request():
     q = request.args.get("q", "").strip()
     category = request.args.get("category", "").strip()
     state = request.args.get("state", "").strip()
+    shipping = request.args.get("shipping", "").strip()
+    sort = request.args.get("sort", "newest").strip()
 
-    query = Listing.query.filter_by(status="active").order_by(
-        Listing.featured.desc(), Listing.created_at.desc()
-    )
+    query = Listing.query.filter_by(status="active")
+
     if q:
         pattern = f"%{q}%"
-        query = query.filter(or_(
-            Listing.title.ilike(pattern),
-            Listing.species.ilike(pattern),
-            Listing.scientific_name.ilike(pattern),
-            Listing.description.ilike(pattern),
-        ))
+        query = query.filter(
+            or_(
+                Listing.title.ilike(pattern),
+                Listing.species.ilike(pattern),
+                Listing.scientific_name.ilike(pattern),
+                Listing.description.ilike(pattern),
+            )
+        )
     if category:
         query = query.filter_by(category=category)
     if state:
         query = query.filter(Listing.state.ilike(f"%{state}%"))
+    if shipping == "shipping":
+        query = query.filter_by(shipping_available=True)
+    elif shipping == "pickup":
+        query = query.filter_by(local_pickup=True)
 
-    stores = Store.query.order_by(Store.featured.desc(), Store.created_at.desc()).limit(8).all()
+    if sort == "price_low":
+        query = query.order_by(Listing.price.asc())
+    elif sort == "price_high":
+        query = query.order_by(Listing.price.desc())
+    else:
+        query = query.order_by(Listing.featured.desc(), Listing.created_at.desc())
+
+    return query, q, category, state, shipping, sort
+
+
+@app.route("/")
+def home():
+    query, q, category, state, shipping, sort = listing_query_from_request()
+    stores = (
+        Store.query.order_by(Store.featured.desc(), Store.created_at.desc())
+        .limit(8)
+        .all()
+    )
     return render_template(
         "index.html",
         listings=query.limit(60).all(),
@@ -182,6 +309,23 @@ def home():
         q=q,
         category=category,
         state=state,
+        shipping=shipping,
+        sort=sort,
+    )
+
+
+@app.route("/browse")
+def browse():
+    query, q, category, state, shipping, sort = listing_query_from_request()
+    return render_template(
+        "browse.html",
+        listings=query.all(),
+        categories=CATEGORIES,
+        q=q,
+        category=category,
+        state=state,
+        shipping=shipping,
+        sort=sort,
     )
 
 
@@ -218,8 +362,13 @@ def login():
     if current_user.is_authenticated:
         return redirect(url_for("dashboard"))
     if request.method == "POST":
-        email = request.form.get("email", "").strip().lower()
-        user = User.query.filter_by(email=email).first()
+        login_value = request.form.get("email", "").strip()
+        user = User.query.filter(
+            or_(
+                db.func.lower(User.email) == login_value.lower(),
+                db.func.lower(User.name) == login_value.lower(),
+            )
+        ).first()
         if user and user.check_password(request.form.get("password", "")):
             login_user(user)
             return redirect(url_for("dashboard"))
@@ -237,17 +386,55 @@ def logout():
 @app.route("/dashboard")
 @login_required
 def dashboard():
-    listings = Listing.query.filter_by(seller_id=current_user.id).order_by(
-        Listing.created_at.desc()
-    ).all()
+    listings = (
+        Listing.query.filter_by(seller_id=current_user.id)
+        .order_by(Listing.created_at.desc())
+        .all()
+    )
     active_count = sum(1 for listing in listings if listing.status == "active")
     sold_count = sum(1 for listing in listings if listing.status == "sold")
+    inquiries = (
+        Inquiry.query.join(Listing)
+        .filter(Listing.seller_id == current_user.id)
+        .order_by(Inquiry.created_at.desc())
+        .limit(20)
+        .all()
+    )
     return render_template(
         "dashboard.html",
         listings=listings,
         active_count=active_count,
         sold_count=sold_count,
+        inquiries=inquiries,
     )
+
+
+@app.route("/favorites")
+@login_required
+def favorites():
+    items = (
+        Favorite.query.filter_by(user_id=current_user.id)
+        .order_by(Favorite.created_at.desc())
+        .all()
+    )
+    return render_template("favorites.html", items=items)
+
+
+@app.route("/listing/<int:listing_id>/favorite", methods=["POST"])
+@login_required
+def toggle_favorite(listing_id):
+    db.get_or_404(Listing, listing_id)
+    favorite = Favorite.query.filter_by(
+        user_id=current_user.id, listing_id=listing_id
+    ).first()
+    if favorite:
+        db.session.delete(favorite)
+        flash("Removed from favorites.", "success")
+    else:
+        db.session.add(Favorite(user_id=current_user.id, listing_id=listing_id))
+        flash("Saved to favorites.", "success")
+    db.session.commit()
+    return redirect(request.referrer or url_for("listing_detail", listing_id=listing_id))
 
 
 @app.route("/store/create", methods=["GET", "POST"])
@@ -264,13 +451,17 @@ def create_store():
         else:
             try:
                 logo = upload_image(request.files.get("logo"), "tankwaves/store-logos")
-                banner = upload_image(request.files.get("banner"), "tankwaves/store-banners")
+                banner = upload_image(
+                    request.files.get("banner"), "tankwaves/store-banners"
+                )
                 store = Store(
                     name=name,
                     slug=slugify(name),
                     description=request.form.get("description", "").strip(),
                     shipping_policy=request.form.get("shipping_policy", "").strip(),
-                    live_arrival_policy=request.form.get("live_arrival_policy", "").strip(),
+                    live_arrival_policy=request.form.get(
+                        "live_arrival_policy", ""
+                    ).strip(),
                     website=request.form.get("website", "").strip(),
                     facebook=request.form.get("facebook", "").strip(),
                     instagram=request.form.get("instagram", "").strip(),
@@ -296,43 +487,74 @@ def edit_store():
     store = current_user.store
     if not store:
         return redirect(url_for("create_store"))
-
     if request.method == "POST":
         try:
             store.name = request.form.get("name", "").strip()
             store.description = request.form.get("description", "").strip()
             store.shipping_policy = request.form.get("shipping_policy", "").strip()
-            store.live_arrival_policy = request.form.get("live_arrival_policy", "").strip()
+            store.live_arrival_policy = request.form.get(
+                "live_arrival_policy", ""
+            ).strip()
             store.website = request.form.get("website", "").strip()
             store.facebook = request.form.get("facebook", "").strip()
             store.instagram = request.form.get("instagram", "").strip()
             store.phone = request.form.get("phone", "").strip()
             store.business_hours = request.form.get("business_hours", "").strip()
-
             logo = upload_image(request.files.get("logo"), "tankwaves/store-logos")
-            banner = upload_image(request.files.get("banner"), "tankwaves/store-banners")
+            banner = upload_image(
+                request.files.get("banner"), "tankwaves/store-banners"
+            )
             if logo:
                 store.logo_url = logo["url"]
             if banner:
                 store.banner_url = banner["url"]
-
             db.session.commit()
             flash("Store updated.", "success")
             return redirect(url_for("storefront", slug=store.slug))
         except Exception as exc:
             db.session.rollback()
             flash(f"Store could not be updated: {exc}", "error")
-
     return render_template("store_form.html", store=store)
 
 
 @app.route("/store/<slug>")
 def storefront(slug):
     store = Store.query.filter_by(slug=slug).first_or_404()
-    listings = Listing.query.filter_by(
-        seller_id=store.owner_id, status="active"
-    ).order_by(Listing.created_at.desc()).all()
+    listings = (
+        Listing.query.filter_by(seller_id=store.owner_id, status="active")
+        .order_by(Listing.created_at.desc())
+        .all()
+    )
     return render_template("storefront.html", store=store, listings=listings)
+
+
+@app.route("/store/<slug>/review", methods=["POST"])
+@login_required
+def review_store(slug):
+    store = Store.query.filter_by(slug=slug).first_or_404()
+    if store.owner_id == current_user.id:
+        flash("You cannot review your own store.", "error")
+        return redirect(url_for("storefront", slug=slug))
+
+    try:
+        rating = int(request.form.get("rating", "0"))
+    except ValueError:
+        rating = 0
+    if rating not in range(1, 6):
+        flash("Choose a rating from 1 to 5.", "error")
+        return redirect(url_for("storefront", slug=slug))
+
+    review = Review.query.filter_by(
+        reviewer_id=current_user.id, store_id=store.id
+    ).first()
+    if not review:
+        review = Review(reviewer_id=current_user.id, store_id=store.id)
+        db.session.add(review)
+    review.rating = rating
+    review.comment = request.form.get("comment", "").strip()
+    db.session.commit()
+    flash("Your review was saved.", "success")
+    return redirect(url_for("storefront", slug=slug))
 
 
 def populate_listing_from_form(listing):
@@ -348,10 +570,16 @@ def populate_listing_from_form(listing):
     listing.local_pickup = bool(request.form.get("local_pickup"))
     listing.description = request.form.get("description", "").strip()
 
-    if not all([
-        listing.title, listing.category, listing.species, listing.city,
-        listing.state, listing.description
-    ]):
+    if not all(
+        [
+            listing.title,
+            listing.category,
+            listing.species,
+            listing.city,
+            listing.state,
+            listing.description,
+        ]
+    ):
         raise ValueError("Please complete all required fields.")
     if listing.price <= 0 or listing.quantity <= 0:
         raise ValueError("Price and quantity must be greater than zero.")
@@ -366,24 +594,27 @@ def create_listing():
             populate_listing_from_form(listing)
             db.session.add(listing)
             db.session.flush()
-
-            files = [f for f in request.files.getlist("photos") if f and f.filename][:10]
+            files = [
+                file
+                for file in request.files.getlist("photos")
+                if file and file.filename
+            ][:10]
             for position, file in enumerate(files):
                 uploaded = upload_image(file, "tankwaves/listings")
-                db.session.add(Photo(
-                    image_url=uploaded["url"],
-                    public_id=uploaded["public_id"],
-                    position=position,
-                    listing_id=listing.id,
-                ))
-
+                db.session.add(
+                    Photo(
+                        image_url=uploaded["url"],
+                        public_id=uploaded["public_id"],
+                        position=position,
+                        listing_id=listing.id,
+                    )
+                )
             db.session.commit()
             flash("Listing published.", "success")
             return redirect(url_for("listing_detail", listing_id=listing.id))
         except Exception as exc:
             db.session.rollback()
             flash(f"Listing could not be published: {exc}", "error")
-
     return render_template("listing_form.html", listing=None, categories=CATEGORIES)
 
 
@@ -393,34 +624,72 @@ def edit_listing(listing_id):
     listing = db.get_or_404(Listing, listing_id)
     if listing.seller_id != current_user.id:
         abort(403)
-
     if request.method == "POST":
         try:
             populate_listing_from_form(listing)
-            new_files = [f for f in request.files.getlist("photos") if f and f.filename]
+            new_files = [
+                file
+                for file in request.files.getlist("photos")
+                if file and file.filename
+            ]
             available_slots = max(0, 10 - len(listing.photos))
-            for position, file in enumerate(new_files[:available_slots], start=len(listing.photos)):
+            for position, file in enumerate(
+                new_files[:available_slots], start=len(listing.photos)
+            ):
                 uploaded = upload_image(file, "tankwaves/listings")
-                db.session.add(Photo(
-                    image_url=uploaded["url"],
-                    public_id=uploaded["public_id"],
-                    position=position,
-                    listing_id=listing.id,
-                ))
+                db.session.add(
+                    Photo(
+                        image_url=uploaded["url"],
+                        public_id=uploaded["public_id"],
+                        position=position,
+                        listing_id=listing.id,
+                    )
+                )
             db.session.commit()
             flash("Listing updated.", "success")
             return redirect(url_for("listing_detail", listing_id=listing.id))
         except Exception as exc:
             db.session.rollback()
             flash(f"Listing could not be updated: {exc}", "error")
-
     return render_template("listing_form.html", listing=listing, categories=CATEGORIES)
 
 
 @app.route("/listing/<int:listing_id>")
 def listing_detail(listing_id):
     listing = db.get_or_404(Listing, listing_id)
-    return render_template("listing.html", listing=listing)
+    is_favorite = False
+    if current_user.is_authenticated:
+        is_favorite = (
+            Favorite.query.filter_by(
+                user_id=current_user.id, listing_id=listing.id
+            ).first()
+            is not None
+        )
+    return render_template(
+        "listing.html", listing=listing, is_favorite=is_favorite
+    )
+
+
+@app.route("/listing/<int:listing_id>/inquire", methods=["POST"])
+def listing_inquiry(listing_id):
+    listing = db.get_or_404(Listing, listing_id)
+    buyer_name = request.form.get("buyer_name", "").strip()
+    buyer_email = request.form.get("buyer_email", "").strip().lower()
+    message = request.form.get("message", "").strip()
+    if not all([buyer_name, buyer_email, message]):
+        flash("Complete all inquiry fields.", "error")
+    else:
+        db.session.add(
+            Inquiry(
+                buyer_name=buyer_name,
+                buyer_email=buyer_email,
+                message=message,
+                listing_id=listing.id,
+            )
+        )
+        db.session.commit()
+        flash("Your message was sent to the seller.", "success")
+    return redirect(url_for("listing_detail", listing_id=listing.id))
 
 
 @app.route("/listing/<int:listing_id>/status", methods=["POST"])
@@ -450,6 +719,62 @@ def delete_listing(listing_id):
     db.session.commit()
     flash("Listing deleted.", "success")
     return redirect(url_for("dashboard"))
+
+
+@app.route("/admin")
+@login_required
+@admin_required
+def admin():
+    users = User.query.order_by(User.created_at.desc()).limit(100).all()
+    stores = Store.query.order_by(Store.created_at.desc()).limit(100).all()
+    listings = Listing.query.order_by(Listing.created_at.desc()).limit(100).all()
+    return render_template(
+        "admin.html", users=users, stores=stores, listings=listings
+    )
+
+
+@app.route("/admin/store/<int:store_id>/verify", methods=["POST"])
+@login_required
+@admin_required
+def admin_verify_store(store_id):
+    store = db.get_or_404(Store, store_id)
+    store.verified = not store.verified
+    db.session.commit()
+    flash("Seller verification updated.", "success")
+    return redirect(url_for("admin"))
+
+
+@app.route("/admin/listing/<int:listing_id>/feature", methods=["POST"])
+@login_required
+@admin_required
+def admin_feature_listing(listing_id):
+    listing = db.get_or_404(Listing, listing_id)
+    listing.featured = not listing.featured
+    db.session.commit()
+    flash("Featured listing status updated.", "success")
+    return redirect(url_for("admin"))
+
+
+
+@app.route("/species/<path:species_name>")
+def species_page(species_name):
+    listings = (
+        Listing.query.filter_by(status="active")
+        .filter(Listing.species.ilike(f"%{species_name}%"))
+        .order_by(Listing.featured.desc(), Listing.created_at.desc())
+        .all()
+    )
+    return render_template(
+        "species.html",
+        species_name=species_name,
+        listings=listings,
+        categories=CATEGORIES,
+    )
+
+
+@app.route("/version")
+def version():
+    return {"name": "TankWaves", "version": APP_VERSION}
 
 
 @app.route("/health")

@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}{{ species_name }} for Sale — TankWaves{% endblock %}
+{% block content %}
+<section class="container results-head">
+  <span class="eyebrow">SPECIES MARKET</span>
+  <h1>{{ species_name }}</h1>
+  <p>Compare all active {{ species_name }} listings from TankWaves sellers.</p>
+</section>
+<section class="container section">
+  <div class="listing-grid">
+    {% for listing in listings %}
+      {% include "_listing_card.html" %}
+    {% else %}
+      <div class="empty-state wide-empty">No active listings for {{ species_name }} yet.</div>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

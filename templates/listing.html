@@ -1,41 +1,54 @@
 {% extends "base.html" %}
+{% block title %}{{ listing.title }} — TankWaves{% endblock %}
+{% block description %}{{ listing.description[:150] }}{% endblock %}
 {% block content %}
-<div class="detail">
-  <section>
+<section class="container listing-page">
+  <div class="gallery">
     {% if listing.photos %}
-      <div class="gallery">
-        {% for photo in listing.photos %}
-          <img src="{{ photo.image_url }}" alt="{{ listing.title }}">
-        {% endfor %}
-      </div>
+      <img class="main-photo" src="{{ listing.photos[0].image_url }}" alt="{{ listing.title }}">
+      {% if listing.photos|length > 1 %}
+        <div class="thumb-row">{% for photo in listing.photos %}<img src="{{ photo.image_url }}" alt="{{ listing.title }} photo {{ loop.index }}">{% endfor %}</div>
+      {% endif %}
     {% else %}
-      <div class="detail-placeholder">TankWaves</div>
+      <div class="main-photo image-placeholder">TankWaves</div>
     {% endif %}
-
-    <div class="panel listing-copy">
-      <small>{{ listing.category }}</small>
-      <h1>{{ listing.title }}</h1>
-      <p>{{ listing.species }}{% if listing.scientific_name %} · <em>{{ listing.scientific_name }}</em>{% endif %}</p>
-      <h2>${{ "%.2f"|format(listing.price) }}</h2>
-      <p>Quantity available: {{ listing.quantity }}</p>
-      <p>{{ listing.description }}</p>
-      <div class="badges">
-        {% if listing.shipping_available %}<span class="badge">Shipping available</span>{% endif %}
-        {% if listing.local_pickup %}<span class="badge">Local pickup</span>{% endif %}
-      </div>
+  </div>
+  <div class="listing-info">
+    <span class="eyebrow">{{ listing.category }}</span>
+    <h1>{{ listing.title }}</h1>
+    <p class="species">{{ listing.species }}{% if listing.scientific_name %} · <em>{{ listing.scientific_name }}</em>{% endif %}</p>
+    <div class="price">${{ "%.2f"|format(listing.price) }}</div>
+    <p>Quantity available: {{ listing.quantity }}</p>
+    <div class="trust-row">
+      {% if listing.shipping_available %}<span>Nationwide shipping</span>{% endif %}
+      {% if listing.local_pickup %}<span>Local pickup</span>{% endif %}
     </div>
-  </section>
-
-  <aside class="panel seller-card">
-    <span class="eyebrow">Seller</span>
+    <div class="description">{{ listing.description }}</div>
+    {% if current_user.is_authenticated %}
+      <form method="post" action="{{ url_for('toggle_favorite', listing_id=listing.id) }}">
+        <button class="button secondary" type="submit">{{ "Remove favorite" if is_favorite else "Save favorite" }}</button>
+      </form>
+    {% endif %}
+  </div>
+  <aside class="seller-panel">
+    <span class="eyebrow">SELLER</span>
     {% if listing.seller.store %}
       <h2>{{ listing.seller.store.name }}</h2>
       <p>{{ listing.city }}, {{ listing.state }}</p>
-      <a class="button" href="{{ url_for('storefront', slug=listing.seller.store.slug) }}">Visit store</a>
+      <p class="rating">★ {{ "%.1f"|format(listing.seller.store.rating_average) }} ({{ listing.seller.store.reviews|length }} reviews)</p>
+      {% if listing.seller.store.verified %}<span class="badge">Verified seller</span>{% endif %}
+      <a class="button secondary" href="{{ url_for('storefront', slug=listing.seller.store.slug) }}">Visit store</a>
     {% else %}
-      <h2>{{ listing.seller.name }}</h2>
-      <p>{{ listing.city }}, {{ listing.state }}</p>
+      <h2>{{ listing.seller.name }}</h2><p>{{ listing.city }}, {{ listing.state }}</p>
     {% endif %}
+    <hr>
+    <h3>Contact seller</h3>
+    <form method="post" action="{{ url_for('listing_inquiry', listing_id=listing.id) }}">
+      <input name="buyer_name" value="{{ current_user.name if current_user.is_authenticated else '' }}" placeholder="Your name" required>
+      <input type="email" name="buyer_email" value="{{ current_user.email if current_user.is_authenticated else '' }}" placeholder="Your email" required>
+      <textarea name="message" rows="4" placeholder="Ask about availability, shipping, or pickup." required></textarea>
+      <button class="button" type="submit">Send inquiry</button>
+    </form>
   </aside>
-</div>
+</section>
 {% endblock %}

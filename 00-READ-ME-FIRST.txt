@@ -1,0 +1,20 @@
+TANKWAVES VERSION 6 — READ THIS FIRST
+
+1. Extract this ZIP on your computer.
+2. Open the extracted folder.
+3. In GitHub, go to TankWaves > Add file > Upload files.
+4. Drag the CONTENTS inside this folder into GitHub:
+   - app.py
+   - README.md
+   - render.yaml
+   - requirements.txt
+   - static folder
+   - templates folder
+
+DO NOT upload this ZIP file itself into GitHub.
+
+After committing to main:
+- Wait for Render to show Live.
+- Open https://tankwaves.com/version
+- It should show: {"name":"TankWaves","version":"6.0"}
+- The homepage should say: "Search once. Compare every seller."

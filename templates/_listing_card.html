@@ -1,0 +1,28 @@
+<article class="listing-card">
+  <a class="listing-image" href="{{ url_for('listing_detail', listing_id=listing.id) }}">
+    {% if listing.photos %}
+      <img src="{{ listing.photos[0].image_url }}" alt="{{ listing.title }}">
+    {% else %}
+      <div class="image-placeholder">TankWaves</div>
+    {% endif %}
+    {% if listing.featured %}<span class="featured">Featured</span>{% endif %}
+  </a>
+  <div class="listing-body">
+    <div class="meta">{{ listing.category }} · {{ listing.city }}, {{ listing.state }}</div>
+    <h3><a href="{{ url_for('listing_detail', listing_id=listing.id) }}">{{ listing.title }}</a></h3>
+    <p><a class="species-link" href="{{ url_for('species_page', species_name=listing.species) }}">{{ listing.species }}</a></p>
+    <div class="listing-bottom">
+      <strong>${{ "%.2f"|format(listing.price) }}</strong>
+      <div>
+        {% if listing.shipping_available %}<span class="tag">Ships</span>{% endif %}
+        {% if listing.local_pickup %}<span class="tag">Pickup</span>{% endif %}
+      </div>
+    </div>
+    {% if listing.seller.store %}
+      <a class="seller-link" href="{{ url_for('storefront', slug=listing.seller.store.slug) }}">
+        {{ listing.seller.store.name }}
+        {% if listing.seller.store.verified %} ✓{% endif %}
+      </a>
+    {% endif %}
+  </div>
+</article>
