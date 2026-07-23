@@ -15,7 +15,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "development-only-secret")
 
-database_url = os.environ.get("DATABASE_URL", "sqlite:///aquamarket.db")
+database_url = os.environ.get("DATABASE_URL", "sqlite:///tankwaves.db")
 if database_url.startswith("postgres://"):
     database_url = database_url.replace("postgres://", "postgresql://", 1)
 
@@ -263,8 +263,8 @@ def create_store():
             flash("That store name is already taken.", "error")
         else:
             try:
-                logo = upload_image(request.files.get("logo"), "aquamarket/store-logos")
-                banner = upload_image(request.files.get("banner"), "aquamarket/store-banners")
+                logo = upload_image(request.files.get("logo"), "tankwaves/store-logos")
+                banner = upload_image(request.files.get("banner"), "tankwaves/store-banners")
                 store = Store(
                     name=name,
                     slug=slugify(name),
@@ -309,8 +309,8 @@ def edit_store():
             store.phone = request.form.get("phone", "").strip()
             store.business_hours = request.form.get("business_hours", "").strip()
 
-            logo = upload_image(request.files.get("logo"), "aquamarket/store-logos")
-            banner = upload_image(request.files.get("banner"), "aquamarket/store-banners")
+            logo = upload_image(request.files.get("logo"), "tankwaves/store-logos")
+            banner = upload_image(request.files.get("banner"), "tankwaves/store-banners")
             if logo:
                 store.logo_url = logo["url"]
             if banner:
@@ -369,7 +369,7 @@ def create_listing():
 
             files = [f for f in request.files.getlist("photos") if f and f.filename][:10]
             for position, file in enumerate(files):
-                uploaded = upload_image(file, "aquamarket/listings")
+                uploaded = upload_image(file, "tankwaves/listings")
                 db.session.add(Photo(
                     image_url=uploaded["url"],
                     public_id=uploaded["public_id"],
@@ -400,7 +400,7 @@ def edit_listing(listing_id):
             new_files = [f for f in request.files.getlist("photos") if f and f.filename]
             available_slots = max(0, 10 - len(listing.photos))
             for position, file in enumerate(new_files[:available_slots], start=len(listing.photos)):
-                uploaded = upload_image(file, "aquamarket/listings")
+                uploaded = upload_image(file, "tankwaves/listings")
                 db.session.add(Photo(
                     image_url=uploaded["url"],
                     public_id=uploaded["public_id"],

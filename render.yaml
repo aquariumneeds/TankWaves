@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: aquamarket
+    name: tankwaves
     runtime: python
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn app:app
@@ -9,9 +9,9 @@ services:
         generateValue: true
       - key: DATABASE_URL
         fromDatabase:
-          name: aquamarket-db
+          name: tankwaves-db
           property: connectionString
 
 databases:
-  - name: aquamarket-db
+  - name: tankwaves-db
     plan: free
