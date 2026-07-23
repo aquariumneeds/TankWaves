@@ -1,4 +1,4 @@
-# TankWaves Version 3 — Production Foundation
+# TankWaves Version 4 — Branding Update
 
 This upgrade adds:
 
