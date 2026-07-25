@@ -1,20 +1,37 @@
-TANKWAVES VERSION 6 — READ THIS FIRST
-
-1. Extract this ZIP on your computer.
-2. Open the extracted folder.
-3. In GitHub, go to TankWaves > Add file > Upload files.
-4. Drag the CONTENTS inside this folder into GitHub:
-   - app.py
-   - README.md
-   - render.yaml
-   - requirements.txt
-   - static folder
-   - templates folder
-
-DO NOT upload this ZIP file itself into GitHub.
-
-After committing to main:
-- Wait for Render to show Live.
-- Open https://tankwaves.com/version
-- It should show: {"name":"TankWaves","version":"6.0"}
-- The homepage should say: "Search once. Compare every seller."
+{% extends "base.html" %}
+{% block title %}{{ "Edit listing" if listing else "Create listing" }} — TankWaves{% endblock %}
+{% block content %}
+<section class="container form-page">
+  <form class="form-card wide" method="post" enctype="multipart/form-data">
+    <span class="eyebrow">SELLER TOOLS</span>
+    <h1>{{ "Edit listing" if listing else "Create a listing" }}</h1>
+    <div class="two-col">
+      <label>Listing title<input name="title" value="{{ listing.title if listing else '' }}" required></label>
+      <label>Category<select name="category" required>
+        <option value="">Choose category</option>
+        {% for item in categories %}<option value="{{ item }}" {% if listing and listing.category == item %}selected{% endif %}>{{ item }}</option>{% endfor %}
+      </select></label>
+    </div>
+    <div class="two-col">
+      <label>Common/species name<input name="species" value="{{ listing.species if listing else '' }}" required></label>
+      <label>Scientific name<input name="scientific_name" value="{{ listing.scientific_name if listing else '' }}"></label>
+    </div>
+    <div class="four-col">
+      <label>Price<input type="number" step="0.01" min="0.01" name="price" value="{{ listing.price if listing else '' }}" required></label>
+      <label>Quantity<input type="number" min="1" name="quantity" value="{{ listing.quantity if listing else 1 }}" required></label>
+      <label>City<input name="city" value="{{ listing.city if listing else current_user.city }}" required></label>
+      <label>State<input name="state" value="{{ listing.state if listing else current_user.state }}" required></label>
+    </div>
+    <label>Photos — up to 10 total<input type="file" name="photos" accept="image/*" multiple></label>
+    {% if listing and listing.photos %}
+      <div class="thumb-row">{% for photo in listing.photos %}<img src="{{ photo.image_url }}" alt="Listing photo">{% endfor %}</div>
+    {% endif %}
+    <label>Description<textarea name="description" rows="8" required>{{ listing.description if listing else '' }}</textarea></label>
+    <div class="check-row">
+      <label><input type="checkbox" name="shipping_available" {% if listing and listing.shipping_available %}checked{% endif %}> Nationwide shipping available</label>
+      <label><input type="checkbox" name="local_pickup" {% if not listing or listing.local_pickup %}checked{% endif %}> Local pickup available</label>
+    </div>
+    <button class="button" type="submit">{{ "Save changes" if listing else "Publish listing" }}</button>
+  </form>
+</section>
+{% endblock %}

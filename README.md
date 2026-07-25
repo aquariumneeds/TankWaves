@@ -1,60 +1,27 @@
-# TankWaves Version 6 — All-Seller Marketplace Search
+# TankWaves Version 7 — Shopping Experience Upgrade
 
-Version 6 makes the public shopping experience work more like eBay:
+Version 7 keeps the working PostgreSQL and Cloudinary foundation from Version 6 and improves the buyer and seller experience.
 
-- One search combines matching listings from every seller
-- Prominent customer-facing marketplace homepage
-- Left-sidebar filters for category, state, delivery, and sorting
-- List-style comparison results with price, seller, rating, location, and delivery badges
-- Species pages showing all sellers offering the same fish or item
-- Watchlist support
-- Seller storefronts remain separate, but marketplace search is not limited to one store
-- Visible “Version 6” marker and `/version` endpoint for deployment verification
-- Login accepts either the registered email or account name
-- No destructive database reset or table deletion
+## New in Version 7
 
-## Verify the deployment
+- Homepage powered by real marketplace listings and real storefronts
+- Stronger all-seller search and category browsing
+- Price range, state, delivery, category, and sorting filters
+- Multi-photo listing gallery with clickable thumbnails
+- Similar listings shown on product pages
+- Store name, seller rating, location, shipping, and pickup details
+- Better watchlist controls
+- Seller dashboard totals for favorites and inquiries
+- Cleaner mobile layout
+- `/version` now returns `7.0`
 
-After Render deploys, visit:
+## Existing services stay connected
 
-```text
-https://tankwaves.com/version
-```
-
-It should display:
-
-```json
-{"name":"TankWaves","version":"6.0"}
-```
-
-The public homepage should say:
-
-```text
-Search once. Compare every seller.
-```
-
-## Existing Render service
-
-Keep your current web service, database, domain, and environment variables.
-
-Build:
-
-```text
-pip install -r requirements.txt
-```
-
-Start:
-
-```text
-gunicorn app:app
-```
-
-Required environment variables:
+Keep the existing Render environment variables:
 
 - `DATABASE_URL`
-- `SECRET_KEY`
 - `CLOUDINARY_URL`
+- `PYTHON_VERSION`
+- `SECRET_KEY` if configured
 
-Optional:
-
-- `ADMIN_EMAILS`
+No database reset is performed. Existing users, stores, listings, photos, favorites, reviews, and inquiries remain intact.

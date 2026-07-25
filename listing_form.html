@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}{{ store.name }} — TankWaves{% endblock %}
+{% block content %}
+<section class="store-hero">
+  {% if store.banner_url %}<img class="store-banner" src="{{ store.banner_url }}" alt="{{ store.name }} banner">{% endif %}
+  <div class="container store-profile">
+    {% if store.logo_url %}<img class="store-logo" src="{{ store.logo_url }}" alt="{{ store.name }} logo">{% else %}<div class="store-logo initial">{{ store.name[0] }}</div>{% endif %}
+    <div><span class="eyebrow">TANKWAVES STORE</span><h1>{{ store.name }}</h1>
+      <p>{{ store.owner.city }}, {{ store.owner.state }}</p>
+      <p class="rating">★ {{ "%.1f"|format(store.rating_average) }} from {{ store.reviews|length }} reviews</p>
+      {% if store.verified %}<span class="badge">Verified seller</span>{% endif %}
+    </div>
+  </div>
+</section>
+<section class="container store-layout section">
+  <div>
+    <h2>About</h2><p>{{ store.description or "This seller has not added a description yet." }}</p>
+    <div class="social-row">
+      {% if store.website %}<a href="{{ store.website }}" target="_blank" rel="noopener">Website</a>{% endif %}
+      {% if store.facebook %}<a href="{{ store.facebook }}" target="_blank" rel="noopener">Facebook</a>{% endif %}
+      {% if store.instagram %}<a href="{{ store.instagram }}" target="_blank" rel="noopener">Instagram</a>{% endif %}
+      {% if store.phone %}<span>{{ store.phone }}</span>{% endif %}
+      {% if store.business_hours %}<span>{{ store.business_hours }}</span>{% endif %}
+    </div>
+  </div>
+  <aside class="policy-card"><h3>Shipping policy</h3><p>{{ store.shipping_policy or "Contact the seller for shipping details." }}</p><h3>Live-arrival guarantee</h3><p>{{ store.live_arrival_policy or "Contact the seller for guarantee details." }}</p></aside>
+</section>
+<section class="container section">
+  <h2>Available now</h2>
+  <div class="listing-grid">{% for listing in listings %}{% include "_listing_card.html" %}{% else %}<div class="empty-state">No active listings.</div>{% endfor %}</div>
+</section>
+<section class="container section review-layout">
+  <div>
+    <h2>Seller reviews</h2>
+    <div class="review-list">
+      {% for review in store.reviews|sort(attribute='created_at', reverse=true) %}
+        <article><strong>{{ review.reviewer.name }} · {{ "★" * review.rating }}</strong><p>{{ review.comment }}</p><small>{{ review.created_at.strftime('%b %d, %Y') }}</small></article>
+      {% else %}<div class="empty-state">No reviews yet.</div>{% endfor %}
+    </div>
+  </div>
+  {% if current_user.is_authenticated and current_user.id != store.owner_id %}
+  <form class="form-card compact" method="post" action="{{ url_for('review_store', slug=store.slug) }}">
+    <h3>Rate this seller</h3>
+    <label>Rating<select name="rating" required><option value="">Choose</option>{% for n in range(5, 0, -1) %}<option value="{{ n }}">{{ n }} stars</option>{% endfor %}</select></label>
+    <label>Review<textarea name="comment" rows="4"></textarea></label>
+    <button class="button" type="submit">Save review</button>
+  </form>
+  {% endif %}
+</section>
+{% endblock %}
