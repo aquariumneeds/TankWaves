@@ -1,21 +1,19 @@
-<form class="search-form" method="get" action="{{ url_for('browse') }}">
-  <input name="q" value="{{ q or '' }}" placeholder="Search fish, coral, plants, equipment...">
-  <select name="category">
-    <option value="">All categories</option>
-    {% for item in categories %}
-      <option value="{{ item }}" {% if category == item %}selected{% endif %}>{{ item }}</option>
-    {% endfor %}
-  </select>
-  <input name="state" value="{{ state or '' }}" placeholder="State">
-  <select name="shipping">
-    <option value="">Any delivery</option>
-    <option value="shipping" {% if shipping == 'shipping' %}selected{% endif %}>Shipping available</option>
-    <option value="pickup" {% if shipping == 'pickup' %}selected{% endif %}>Local pickup</option>
-  </select>
-  <select name="sort">
-    <option value="newest" {% if sort == 'newest' %}selected{% endif %}>Newest</option>
-    <option value="price_low" {% if sort == 'price_low' %}selected{% endif %}>Price: low to high</option>
-    <option value="price_high" {% if sort == 'price_high' %}selected{% endif %}>Price: high to low</option>
-  </select>
-  <button class="button" type="submit">Search</button>
-</form>
+{% extends "base.html" %}
+{% block title %}Join — TankWaves{% endblock %}
+{% block content %}
+<section class="container auth-wrap">
+  <form class="form-card" method="post">
+    <span class="eyebrow">JOIN TANKWAVES</span>
+    <h1>Create your account</h1>
+    <p>Buy as a hobbyist, sell individually, or open a full business storefront.</p>
+    <label>Full name<input name="name" required></label>
+    <label>Email<input type="email" name="email" required autocomplete="email"></label>
+    <label>Password<input type="password" name="password" required minlength="8" autocomplete="new-password"></label>
+    <div class="two-col">
+      <label>City<input name="city" required></label>
+      <label>State<input name="state" required></label>
+    </div>
+    <button class="button" type="submit">Create account</button>
+  </form>
+</section>
+{% endblock %}

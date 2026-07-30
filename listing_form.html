@@ -1,50 +1,99 @@
 {% extends "base.html" %}
-{% block title %}{{ store.name }} — TankWaves{% endblock %}
+{% block title %}TankWaves — Search Every Aquarium Seller{% endblock %}
 {% block content %}
-<section class="store-hero">
-  {% if store.banner_url %}<img class="store-banner" src="{{ store.banner_url }}" alt="{{ store.name }} banner">{% endif %}
-  <div class="container store-profile">
-    {% if store.logo_url %}<img class="store-logo" src="{{ store.logo_url }}" alt="{{ store.name }} logo">{% else %}<div class="store-logo initial">{{ store.name[0] }}</div>{% endif %}
-    <div><span class="eyebrow">TANKWAVES STORE</span><h1>{{ store.name }}</h1>
-      <p>{{ store.owner.city }}, {{ store.owner.state }}</p>
-      <p class="rating">★ {{ "%.1f"|format(store.rating_average) }} from {{ store.reviews|length }} reviews</p>
-      {% if store.verified %}<span class="badge">Verified seller</span>{% endif %}
+<section class="market-hero">
+  <div class="container">
+    <div class="v6-chip">TANKWAVES VERSION 6</div>
+    <h1>Search once.<br>Compare every seller.</h1>
+    <p class="lead">Find the same fish from breeders, hobbyists, coral farms, and stores across the country—together on one marketplace results page.</p>
+
+    <form class="market-search" action="{{ url_for('browse') }}" method="get">
+      <input name="q" placeholder="Try “Discus”, “Blue Ram”, “L134 Pleco”, or “Torch Coral”">
+      <select name="category">
+        <option value="">All categories</option>
+        {% for item in categories %}<option value="{{ item }}">{{ item }}</option>{% endfor %}
+      </select>
+      <button class="button" type="submit">Search all sellers</button>
+    </form>
+
+    <div class="hero-links">
+      <a href="{{ url_for('browse', shipping='shipping') }}">Items that ship</a>
+      <a href="{{ url_for('browse', shipping='pickup') }}">Local pickup</a>
+      <a href="{{ url_for('browse', sort='newest') }}">Newly listed</a>
+      <a href="{{ url_for('create_listing') if current_user.is_authenticated else url_for('register') }}">Sell on TankWaves</a>
     </div>
   </div>
 </section>
-<section class="container store-layout section">
-  <div>
-    <h2>About</h2><p>{{ store.description or "This seller has not added a description yet." }}</p>
-    <div class="social-row">
-      {% if store.website %}<a href="{{ store.website }}" target="_blank" rel="noopener">Website</a>{% endif %}
-      {% if store.facebook %}<a href="{{ store.facebook }}" target="_blank" rel="noopener">Facebook</a>{% endif %}
-      {% if store.instagram %}<a href="{{ store.instagram }}" target="_blank" rel="noopener">Instagram</a>{% endif %}
-      {% if store.phone %}<span>{{ store.phone }}</span>{% endif %}
-      {% if store.business_hours %}<span>{{ store.business_hours }}</span>{% endif %}
-    </div>
-  </div>
-  <aside class="policy-card"><h3>Shipping policy</h3><p>{{ store.shipping_policy or "Contact the seller for shipping details." }}</p><h3>Live-arrival guarantee</h3><p>{{ store.live_arrival_policy or "Contact the seller for guarantee details." }}</p></aside>
-</section>
+
 <section class="container section">
-  <h2>Available now</h2>
-  <div class="listing-grid">{% for listing in listings %}{% include "_listing_card.html" %}{% else %}<div class="empty-state">No active listings.</div>{% endfor %}</div>
+  <div class="section-heading">
+    <div><span class="eyebrow">SHOP BY CATEGORY</span><h2>Everything for the aquarium hobby</h2></div>
+  </div>
+  <div class="category-grid">
+    {% for item in categories %}
+      <a class="category-card" href="{{ url_for('browse', category=item) }}">
+        <span class="category-icon">{{ loop.index }}</span>
+        <strong>{{ item }}</strong>
+        <small>View every seller →</small>
+      </a>
+    {% endfor %}
+  </div>
 </section>
-<section class="container section review-layout">
-  <div>
-    <h2>Seller reviews</h2>
-    <div class="review-list">
-      {% for review in store.reviews|sort(attribute='created_at', reverse=true) %}
-        <article><strong>{{ review.reviewer.name }} · {{ "★" * review.rating }}</strong><p>{{ review.comment }}</p><small>{{ review.created_at.strftime('%b %d, %Y') }}</small></article>
-      {% else %}<div class="empty-state">No reviews yet.</div>{% endfor %}
+
+<section class="comparison-band">
+  <div class="container comparison-grid">
+    <div>
+      <span class="eyebrow">HOW TANKWAVES WORKS</span>
+      <h2>One fish. Multiple sellers. Your choice.</h2>
+      <p>A customer searching “Discus” sees all active Discus listings from every seller. They can compare price, location, shipping, store rating, and listing details before contacting a seller.</p>
+    </div>
+    <div class="comparison-example">
+      <div><b>Red Turquoise Discus</b><span>Aquarium Needs · Ships</span><strong>$79.99</strong></div>
+      <div><b>Blue Diamond Discus</b><span>Carolina Discus · Pickup</span><strong>$89.00</strong></div>
+      <div><b>Juvenile Discus Pack</b><span>Fish House USA · Ships</span><strong>$249.00</strong></div>
     </div>
   </div>
-  {% if current_user.is_authenticated and current_user.id != store.owner_id %}
-  <form class="form-card compact" method="post" action="{{ url_for('review_store', slug=store.slug) }}">
-    <h3>Rate this seller</h3>
-    <label>Rating<select name="rating" required><option value="">Choose</option>{% for n in range(5, 0, -1) %}<option value="{{ n }}">{{ n }} stars</option>{% endfor %}</select></label>
-    <label>Review<textarea name="comment" rows="4"></textarea></label>
-    <button class="button" type="submit">Save review</button>
-  </form>
-  {% endif %}
+</section>
+
+<section class="container section">
+  <div class="section-heading">
+    <div><span class="eyebrow">MARKETPLACE</span><h2>Newest listings from all sellers</h2></div>
+    <a href="{{ url_for('browse') }}">See all results →</a>
+  </div>
+  <div class="listing-grid">
+    {% for listing in listings %}
+      {% include "_listing_card.html" %}
+    {% else %}
+      <div class="empty-state wide-empty">
+        <h3>Your marketplace is ready for listings.</h3>
+        <p>As stores and hobbyists publish products, every active listing will appear here and in customer searches.</p>
+      </div>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="container section">
+  <div class="section-heading">
+    <div><span class="eyebrow">SELLERS</span><h2>Stores, breeders, and hobbyists</h2></div>
+  </div>
+  <div class="store-grid">
+    {% for store in stores %}
+      <a class="store-card" href="{{ url_for('storefront', slug=store.slug) }}">
+        {% if store.logo_url %}
+          <img src="{{ store.logo_url }}" alt="{{ store.name }} logo">
+        {% else %}
+          <div class="initial">{{ store.name[0] }}</div>
+        {% endif %}
+        <div>
+          <h3>{{ store.name }}</h3>
+          <p>{{ store.owner.city }}, {{ store.owner.state }}</p>
+          <span class="rating">★ {{ "%.1f"|format(store.rating_average) }} ({{ store.reviews|length }})</span>
+          {% if store.verified %}<span class="badge">Verified</span>{% endif %}
+        </div>
+      </a>
+    {% else %}
+      <div class="empty-state wide-empty">No public stores yet. Your store will appear here after its account is active.</div>
+    {% endfor %}
+  </div>
 </section>
 {% endblock %}

@@ -1,1 +1,28 @@
-{% extends 'base.html' %}{% block title %}{{listing.title}} — TankWaves{% endblock %}{% block content %}<section class="container section"><div class="detail-grid"><div><div class="gallery-main">{% if listing.photos %}<img id="main-photo" src="{{listing.photos[0].image_url}}" alt="{{listing.title}}">{% else %}<div class="image-placeholder">No photo</div>{% endif %}</div>{% if listing.photos|length > 1 %}<div class="thumb-row">{% for photo in listing.photos %}<button type="button" onclick="document.getElementById('main-photo').src='{{photo.image_url}}'"><img src="{{photo.image_url}}" alt="Photo {{loop.index}}"></button>{% endfor %}</div>{% endif %}</div><div class="listing-copy"><span class="eyebrow">{{listing.category}}</span><h1>{{listing.title}}</h1><p class="muted">{{listing.species}}{% if listing.scientific_name %} · <em>{{listing.scientific_name}}</em>{% endif %}</p><div class="detail-price">${{'%.2f'|format(listing.price)}}</div><p>Quantity available: <b>{{listing.quantity}}</b></p><div class="badge-row">{% if listing.shipping_available %}<span class="badge">Nationwide shipping</span>{% endif %}{% if listing.local_pickup %}<span class="badge">Local pickup</span>{% endif %}</div><div class="description">{{listing.description}}</div><form method="post" action="{{url_for('toggle_favorite',listing_id=listing.id)}}"><button class="secondary-button">{% if is_favorite %}Remove from watchlist{% else %}Save to watchlist{% endif %}</button></form></div><aside class="seller-panel"><span class="eyebrow">SELLER</span>{% if listing.seller.store %}<a class="seller-name" href="{{url_for('storefront',slug=listing.seller.store.slug)}}">{{listing.seller.store.name}}</a><p>★ {{'%.1f'|format(listing.seller.store.rating_average)}} · {{listing.seller.store.reviews|length}} reviews</p>{% else %}<h2>{{listing.seller.name}}</h2>{% endif %}<p>{{listing.city}}, {{listing.state}}</p><hr><h3>Contact seller</h3><form method="post" action="{{url_for('listing_inquiry',listing_id=listing.id)}}"><input name="buyer_name" required placeholder="Your name" value="{{current_user.name if current_user.is_authenticated else ''}}"><input name="buyer_email" type="email" required placeholder="Email" value="{{current_user.email if current_user.is_authenticated else ''}}"><textarea name="message" required placeholder="Ask about availability, shipping, or pickup."></textarea><button class="button full">Send inquiry</button></form></aside></div></section>{% if related %}<section class="container section"><div class="section-heading"><div><span class="eyebrow">MORE TO EXPLORE</span><h2>Similar {{listing.category}} listings</h2></div></div><div class="listing-grid">{% for listing in related %}{% include '_listing_card.html' %}{% endfor %}</div></section>{% endif %}{% endblock %}
+<article class="listing-card">
+  <a class="listing-image" href="{{ url_for('listing_detail', listing_id=listing.id) }}">
+    {% if listing.photos %}
+      <img src="{{ listing.photos[0].image_url }}" alt="{{ listing.title }}">
+    {% else %}
+      <div class="image-placeholder">TankWaves</div>
+    {% endif %}
+    {% if listing.featured %}<span class="featured">Featured</span>{% endif %}
+  </a>
+  <div class="listing-body">
+    <div class="meta">{{ listing.category }} · {{ listing.city }}, {{ listing.state }}</div>
+    <h3><a href="{{ url_for('listing_detail', listing_id=listing.id) }}">{{ listing.title }}</a></h3>
+    <p><a class="species-link" href="{{ url_for('species_page', species_name=listing.species) }}">{{ listing.species }}</a></p>
+    <div class="listing-bottom">
+      <strong>${{ "%.2f"|format(listing.price) }}</strong>
+      <div>
+        {% if listing.shipping_available %}<span class="tag">Ships</span>{% endif %}
+        {% if listing.local_pickup %}<span class="tag">Pickup</span>{% endif %}
+      </div>
+    </div>
+    {% if listing.seller.store %}
+      <a class="seller-link" href="{{ url_for('storefront', slug=listing.seller.store.slug) }}">
+        {{ listing.seller.store.name }}
+        {% if listing.seller.store.verified %} ✓{% endif %}
+      </a>
+    {% endif %}
+  </div>
+</article>

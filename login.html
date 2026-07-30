@@ -1,28 +1,91 @@
 {% extends "base.html" %}
-{% block title %}{{ "Edit store" if store else "Open a store" }} — TankWaves{% endblock %}
+{% block title %}{{ listing.title }} — TankWaves{% endblock %}
+{% block description %}{{ listing.description[:150] }}{% endblock %}
 {% block content %}
-<section class="container form-page">
-  <form class="form-card wide" method="post" enctype="multipart/form-data">
-    <span class="eyebrow">BUSINESS STOREFRONT</span>
-    <h1>{{ "Edit your store" if store else "Open your TankWaves store" }}</h1>
-    <label>Store name<input name="name" value="{{ store.name if store else '' }}" required></label>
-    <label>About your business<textarea name="description" rows="6">{{ store.description if store else '' }}</textarea></label>
-    <div class="two-col">
-      <label>Store logo<input type="file" name="logo" accept="image/*"></label>
-      <label>Store cover banner<input type="file" name="banner" accept="image/*"></label>
+<section class="container listing-page">
+  <div class="gallery">
+    {% if listing.photos %}
+      <img id="mainListingPhoto" class="main-photo" src="{{ listing.photos[0].image_url }}" alt="{{ listing.title }}">
+      {% if listing.photos|length > 1 %}
+        <div class="thumb-row gallery-thumbs">
+          {% for photo in listing.photos %}
+            <button type="button" class="thumb-button {% if loop.first %}active{% endif %}" data-image="{{ photo.image_url }}" aria-label="View photo {{ loop.index }}">
+              <img src="{{ photo.image_url }}" alt="{{ listing.title }} photo {{ loop.index }}">
+            </button>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% else %}
+      <div class="main-photo image-placeholder">TankWaves</div>
+    {% endif %}
+  </div>
+
+  <div class="listing-info">
+    <span class="eyebrow">{{ listing.category }}</span>
+    <h1>{{ listing.title }}</h1>
+    <p class="species">{{ listing.species }}{% if listing.scientific_name %} · <em>{{ listing.scientific_name }}</em>{% endif %}</p>
+    <div class="price">${{ "%.2f"|format(listing.price) }}</div>
+    <div class="listing-metrics">
+      <span>{{ view_count }} views</span>
+      <span>{{ favorite_count }} watching</span>
+      <span>Quantity {{ listing.quantity }}</span>
     </div>
-    <div class="two-col">
-      <label>Shipping policy<textarea name="shipping_policy" rows="5">{{ store.shipping_policy if store else '' }}</textarea></label>
-      <label>Live-arrival policy<textarea name="live_arrival_policy" rows="5">{{ store.live_arrival_policy if store else '' }}</textarea></label>
+    <div class="trust-row">
+      {% if listing.shipping_available %}<span>Nationwide shipping</span>{% endif %}
+      {% if listing.local_pickup %}<span>Local pickup</span>{% endif %}
     </div>
-    <div class="two-col">
-      <label>Website<input name="website" value="{{ store.website if store else '' }}"></label>
-      <label>Phone<input name="phone" value="{{ store.phone if store else '' }}"></label>
-      <label>Facebook<input name="facebook" value="{{ store.facebook if store else '' }}"></label>
-      <label>Instagram<input name="instagram" value="{{ store.instagram if store else '' }}"></label>
-    </div>
-    <label>Business hours<input name="business_hours" value="{{ store.business_hours if store else '' }}"></label>
-    <button class="button" type="submit">{{ "Save store" if store else "Open store" }}</button>
-  </form>
+    <div class="description">{{ listing.description }}</div>
+    {% if current_user.is_authenticated %}
+      <form method="post" action="{{ url_for('toggle_favorite', listing_id=listing.id) }}">
+        <button class="button secondary" type="submit">{{ "Remove from watchlist" if is_favorite else "Add to watchlist" }}</button>
+      </form>
+    {% endif %}
+  </div>
+
+  <aside class="seller-panel">
+    <span class="eyebrow">SELLER</span>
+    {% if listing.seller.store %}
+      <h2>{{ listing.seller.store.name }}</h2>
+      <p>{{ listing.city }}, {{ listing.state }}</p>
+      <p class="rating">★ {{ "%.1f"|format(listing.seller.store.rating_average) }} ({{ listing.seller.store.reviews|length }} reviews)</p>
+      {% if listing.seller.store.verified %}<span class="badge">Verified seller</span>{% endif %}
+      <a class="button secondary" href="{{ url_for('storefront', slug=listing.seller.store.slug) }}">Visit store</a>
+    {% else %}
+      <h2>{{ listing.seller.name }}</h2><p>{{ listing.city }}, {{ listing.state }}</p>
+    {% endif %}
+    <hr>
+    <h3>Contact seller</h3>
+    <form method="post" action="{{ url_for('listing_inquiry', listing_id=listing.id) }}">
+      <input name="buyer_name" value="{{ current_user.name if current_user.is_authenticated else '' }}" placeholder="Your name" required>
+      <input type="email" name="buyer_email" value="{{ current_user.email if current_user.is_authenticated else '' }}" placeholder="Your email" required>
+      <textarea name="message" rows="4" placeholder="Ask about availability, shipping, or pickup." required></textarea>
+      <button class="button" type="submit">Send inquiry</button>
+    </form>
+  </aside>
 </section>
+
+{% if related %}
+<section class="container section">
+  <div class="section-heading">
+    <div><span class="eyebrow">COMPARE OPTIONS</span><h2>Similar listings from other sellers</h2></div>
+    <a href="{{ url_for('browse', q=listing.species) }}">See all {{ listing.species }} →</a>
+  </div>
+  <div class="listing-grid">
+    {% for item in related %}
+      {% set listing = item %}
+      {% include "_listing_card.html" %}
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<script>
+document.querySelectorAll(".thumb-button").forEach((button) => {
+  button.addEventListener("click", () => {
+    document.getElementById("mainListingPhoto").src = button.dataset.image;
+    document.querySelectorAll(".thumb-button").forEach((item) => item.classList.remove("active"));
+    button.classList.add("active");
+  });
+});
+</script>
 {% endblock %}

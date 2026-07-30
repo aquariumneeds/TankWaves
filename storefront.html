@@ -1,14 +1,18 @@
 {% extends "base.html" %}
-{% block title %}Admin — TankWaves{% endblock %}
+{% block title %}{{ species_name }} for Sale — TankWaves{% endblock %}
 {% block content %}
-<section class="container page-head"><span class="eyebrow">ADMIN</span><h1>Marketplace moderation</h1></section>
-<section class="container section">
-  <h2>Stores</h2>
-  <div class="dashboard-list">{% for store in stores %}<div class="dashboard-row"><div><strong>{{ store.name }}</strong><span>{{ store.owner.email }} · {{ "Verified" if store.verified else "Unverified" }}</span></div><form method="post" action="{{ url_for('admin_verify_store', store_id=store.id) }}"><button class="button secondary" type="submit">{{ "Remove verification" if store.verified else "Verify seller" }}</button></form></div>{% endfor %}</div>
+<section class="container results-head">
+  <span class="eyebrow">SPECIES MARKET</span>
+  <h1>{{ species_name }}</h1>
+  <p>Compare all active {{ species_name }} listings from TankWaves sellers.</p>
 </section>
 <section class="container section">
-  <h2>Listings</h2>
-  <div class="dashboard-list">{% for listing in listings %}<div class="dashboard-row"><div><strong>{{ listing.title }}</strong><span>{{ listing.seller.email }} · {{ listing.status }} · {{ "Featured" if listing.featured else "Standard" }}</span></div><form method="post" action="{{ url_for('admin_feature_listing', listing_id=listing.id) }}"><button class="button secondary" type="submit">{{ "Unfeature" if listing.featured else "Feature" }}</button></form></div>{% endfor %}</div>
+  <div class="listing-grid">
+    {% for listing in listings %}
+      {% include "_listing_card.html" %}
+    {% else %}
+      <div class="empty-state wide-empty">No active listings for {{ species_name }} yet.</div>
+    {% endfor %}
+  </div>
 </section>
-<section class="container section"><h2>Users</h2><div class="dashboard-list">{% for user in users %}<div class="dashboard-row"><div><strong>{{ user.name }}</strong><span>{{ user.email }} · {{ user.city }}, {{ user.state }}</span></div><small>{{ user.created_at.strftime('%b %d, %Y') }}</small></div>{% endfor %}</div></section>
 {% endblock %}

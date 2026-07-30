@@ -1,1 +1,70 @@
-{% extends 'base.html' %}{% block title %}Shop — TankWaves{% endblock %}{% block content %}<section class="container section"><div class="results-header"><div><span class="eyebrow">ALL-SELLER SEARCH</span><h1>{% if q %}Results for “{{q}}”{% else %}Shop all listings{% endif %}</h1><p>{{listings|length}} active listing{% if listings|length != 1 %}s{% endif %}</p></div></div><div class="market-layout"><aside class="filter-panel"><form method="get"><label>Keywords<input name="q" value="{{q}}"></label><label>Category<select name="category"><option value="">All categories</option>{% for item in categories %}<option value="{{item}}" {% if category==item %}selected{% endif %}>{{item}}</option>{% endfor %}</select></label><label>State<input name="state" value="{{state}}" placeholder="NC"></label><div class="price-row"><label>Min price<input type="number" step="0.01" name="min_price" value="{{min_price}}"></label><label>Max price<input type="number" step="0.01" name="max_price" value="{{max_price}}"></label></div><label>Delivery<select name="shipping"><option value="">Any</option><option value="shipping" {% if shipping=='shipping' %}selected{% endif %}>Nationwide shipping</option><option value="pickup" {% if shipping=='pickup' %}selected{% endif %}>Local pickup</option></select></label><label>Sort<select name="sort"><option value="newest" {% if sort=='newest' %}selected{% endif %}>Newest</option><option value="price_low" {% if sort=='price_low' %}selected{% endif %}>Price: low to high</option><option value="price_high" {% if sort=='price_high' %}selected{% endif %}>Price: high to low</option></select></label><button class="button full">Apply filters</button><a class="clear-link" href="{{url_for('browse')}}">Clear all</a></form></aside><div><div class="listing-grid">{% for listing in listings %}{% include '_listing_card.html' %}{% else %}<div class="empty-state wide-empty"><h3>No matches found</h3><p>Try removing a filter or using a broader fish name.</p></div>{% endfor %}</div></div></div></section>{% endblock %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="{% block description %}TankWaves is a nationwide aquarium marketplace connecting buyers with hobbyists, breeders, coral farms, and stores.{% endblock %}">
+  <title>{% block title %}TankWaves{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=7">
+</head>
+<body>
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="brand" href="{{ url_for('home') }}">
+      <span class="brand-mark">TW</span>
+      <span>TankWaves</span>
+    </a>
+
+    <form class="header-search" action="{{ url_for('browse') }}" method="get">
+      <input name="q" placeholder="Search all sellers for fish, coral, plants...">
+      <button type="submit">Search</button>
+    </form>
+
+    <nav>
+      <a href="{{ url_for('browse') }}">Shop</a>
+      <a href="{{ url_for('stores_directory') }}">Sellers</a>
+      {% if current_user.is_authenticated %}
+        <a href="{{ url_for('favorites') }}">Watchlist</a>
+        <a href="{{ url_for('dashboard') }}">Selling</a>
+        <a class="button small" href="{{ url_for('create_listing') }}">List an item</a>
+        <a href="{{ url_for('logout') }}">Log out</a>
+      {% else %}
+        <a href="{{ url_for('login') }}">Log in</a>
+        <a class="button small" href="{{ url_for('register') }}">Join</a>
+      {% endif %}
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="container flash-wrap">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, text in messages %}
+        <div class="flash {{ category }}">{{ text }}</div>
+      {% endfor %}
+    {% endwith %}
+  </div>
+  {% block content %}{% endblock %}
+</main>
+
+<footer class="site-footer">
+  <div class="container footer-grid">
+    <div>
+      <strong>TankWaves</strong>
+      <p>The aquarium marketplace where every seller’s matching listings appear together.</p>
+      <span class="version-badge">Version 7</span>
+    </div>
+    <div>
+      <strong>Buy</strong>
+      <a href="{{ url_for('browse') }}">Search all listings</a>
+      <a href="{{ url_for('favorites') if current_user.is_authenticated else url_for('login') }}">Watchlist</a>
+    </div>
+    <div>
+      <strong>Sell</strong>
+      <a href="{{ url_for('create_listing') if current_user.is_authenticated else url_for('register') }}">Create a listing</a>
+      <a href="{{ url_for('create_store') if current_user.is_authenticated else url_for('register') }}">Open a storefront</a>
+    </div>
+  </div>
+</footer>
+</body>
+</html>
